@@ -48,13 +48,17 @@ type UpdateManyOutput = { data: Object[] };
 type GetManyReferenceOutput = { data: Object[]; total: number };
 
 type TreeFile = {
+  id: string;
+  mode: string;
+  name: string;
   path: string;
+  type: string;
 };
 
 type File = {
   content: string;
   encoding: string;
-  file_path: string;
+  filePath: string;
 };
 
 export class EntityProvider {
@@ -85,7 +89,7 @@ export class EntityProvider {
     const content = JSON.parse(
       Buffer.from(file.content, file.encoding).toString("utf8"),
     );
-    return this._createFile(file.file_path, content);
+    return this._createFile(file.filePath, content);
   };
 
   private _stringifyEntity = (entity: Object) => {
@@ -148,7 +152,7 @@ export class EntityProvider {
       [
         {
           action: "create",
-          file_path: data.id,
+          filePath: data.id,
           content: this._stringifyEntity(data),
         },
       ],
@@ -165,7 +169,7 @@ export class EntityProvider {
       [
         {
           action: "update",
-          file_path: params.id,
+          filePath: params.id,
           content: this._stringifyEntity(params.data),
         },
       ],
@@ -182,7 +186,7 @@ export class EntityProvider {
       [
         {
           action: "delete",
-          file_path: params.id,
+          filePath: params.id,
         },
       ],
       {},
