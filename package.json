@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "gitlab": "^5.0.0-rc.7",
+    "postinstall": "^0.4.2",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
