@@ -29,18 +29,7 @@ const authProvider = createAuthProvider({
   clientId: process.env.GITLAB_OAUTH_CLIENT_ID,
 });
 
-console.log(process.env.GITLAB_PROJECT_ID)
-
 const dataProvider = (action, resource, params) => {
-  console.log({
-    projectId: process.env.GITLAB_PROJECT_ID,
-    ref: process.env.GITLAB_REF,
-    basePath: resourcePaths[resource],
-
-    gitlabOptions: {
-      host: process.env.GITLAB_API,
-    },
-  })
   const provider = createDataProvider({
     projectId: process.env.GITLAB_PROJECT_ID,
     ref: process.env.GITLAB_REF,
