@@ -34,7 +34,7 @@ export const authProvider = (options: AuthOptions) => (type: string, params: obj
 
 function getRedirectUrl(options: AuthOptions) {
   return [
-    options.baseUrl,
+    `${options.baseUrl}/oauth/authorize`,
     "?",
     querystring.stringify({
       client_id: options.clientId,
