@@ -5,6 +5,7 @@ import uuid = require("uuid");
 export interface AuthOptions {
   baseUrl: string;
   clientId: string;
+  redirectUri: string;
 }
 
 export const authProvider = (options: AuthOptions) => (type: string, params: object) => {
@@ -21,8 +22,9 @@ export const authProvider = (options: AuthOptions) => (type: string, params: obj
     return Promise.resolve();
   }
   if (type === "AUTH_CHECK") {
-    if (window.location.pathname === "/oauth/callback") {
-      const qs = querystring.parse(window.location.search.replace(/^\?/, ""));
+    const qsValue = window.location.search.replace(/^\?/, "")
+    if (qsValue) {
+      const qs = querystring.parse(qsValue);
       if (typeof qs.code === "string") {
         setToken(qs.code);
       }
@@ -38,7 +40,7 @@ function getRedirectUrl(options: AuthOptions) {
     "?",
     querystring.stringify({
       client_id: options.clientId,
-      redirect_uri: `http://${window.location.host}/oauth/callback`,
+      redirect_uri: options.redirectUri,
       response_type: "token",
       scope: "api",
       state: uuid(),
