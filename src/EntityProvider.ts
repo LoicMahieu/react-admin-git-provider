@@ -1,6 +1,5 @@
-import { Repositories, RepositoryFiles, Commits, Gitlab } from "gitlab";
+import { Repositories, RepositoryFiles, Commits } from "gitlab";
 import uuid from "uuid";
-import { CommitAction } from "gitlab/types/types";
 
 export type ListParams = {
   pagination: {
@@ -195,14 +194,15 @@ export class EntityProvider {
   }
 
   async deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput> {
+    const actions = params.ids.map(id => ({
+      action: "delete" as "delete", // TS could be weird !
+      filePath: id,
+    }))
     await this.commits.create(
       this.projectId,
       this.ref,
       "Delete many",
-      params.ids.map(id => ({
-        action: "delete",
-        filePath: id,
-      })) as CommitAction[],
+      actions,
       {},
     );
     return { data: params.ids };
