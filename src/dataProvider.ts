@@ -22,10 +22,15 @@ export const dataProvider = ({
   basePath: string;
   gitlabOptions: { host: string };
 }) => async (type: string, resource: string, params: Params) => {
+  const oauthToken = getToken() || undefined
+  if (!oauthToken) {
+    throw new Error('User is not logged.')
+  }
+
   const entityProvider = new EntityProvider(
     {
       ...gitlabOptions,
-      oauthToken: getToken() || undefined,
+      oauthToken,
     },
     projectId,
     ref,

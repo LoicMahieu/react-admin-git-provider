@@ -1,2 +1,2 @@
-export { authProvider } from "./authProvider";
+export { authProvider, initialCheckForToken } from "./authProvider";
 export { dataProvider } from "./dataProvider";

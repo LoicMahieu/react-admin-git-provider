@@ -17,8 +17,12 @@ import {
 } from "react-admin";
 import {
   authProvider as createAuthProvider,
+  initialCheckForToken,
   dataProvider as createDataProvider,
 } from "../../lib";
+import { LoginPage } from "./LoginPage";
+
+initialCheckForToken()
 
 const resourcePaths = {
   users: "src/data/faq/entry",
@@ -85,7 +89,7 @@ const App = () => (
   <Admin
     dataProvider={dataProvider}
     authProvider={authProvider}
-    loginPage={"div"}
+    loginPage={LoginPage}
   >
     <Resource
       name="users"
