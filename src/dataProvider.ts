@@ -22,8 +22,6 @@ export const dataProvider = ({
   basePath: string;
   gitlabOptions: { host: string };
 }) => async (type: string, resource: string, params: Params) => {
-  console.log(type, resource, params);
-
   const entityProvider = new EntityProvider(
     {
       ...gitlabOptions,
