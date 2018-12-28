@@ -1,33 +1,33 @@
-import { Repositories, RepositoryFiles, Commits } from "gitlab";
-import uuid from "uuid";
+import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import { basename, extname } from "path";
+import uuid from "uuid";
 
-export type ListParams = {
+export interface ListParams {
   pagination: {
     page: number;
     perPage: number;
   };
-};
-export type GetOneParams = {
+}
+export interface GetOneParams {
   id: string;
-};
-export type GetManyParams = {
+}
+export interface GetManyParams {
   ids: string[];
-};
-export type CreateParams = {
-  data: Object;
-};
-export type UpdateParams = {
+}
+export interface CreateParams {
+  data: object;
+}
+export interface UpdateParams {
   id: string;
-  data: Object;
-};
-export type DeleteParams = {
+  data: object;
+}
+export interface DeleteParams {
   id: string;
-  previousData: Object;
-};
-export type DeleteManyParams = {
+  previousData: object;
+}
+export interface DeleteManyParams {
   ids: string[];
-};
+}
 export type Params =
   | ListParams
   | GetOneParams
@@ -37,31 +37,31 @@ export type Params =
   | DeleteParams
   | DeleteManyParams;
 
-type GetListOutput = { data: Object[]; total: number };
-type GetOneOutput = { data: Object };
-type CreateOutput = { data: Object };
-type UpdateOutput = { data: Object };
-type DeleteOutput = { data: Object };
-type DeleteManyOutput = { data: string[] };
-type GetManyOutput = { data: Object[] };
-type UpdateManyOutput = { data: Object[] };
-type GetManyReferenceOutput = { data: Object[]; total: number };
+interface GetListOutput { data: object[]; total: number }
+export interface GetOneOutput { data: object }
+interface CreateOutput { data: object }
+interface UpdateOutput { data: object }
+interface DeleteOutput { data: object }
+interface DeleteManyOutput { data: string[] }
+interface GetManyOutput { data: object[] }
+// interface UpdateManyOutput { data: object[] }
+// interface GetManyReferenceOutput { data: object[]; total: number }
 
-type TreeFile = {
+interface TreeFile {
   id: string;
   mode: string;
   name: string;
   path: string;
   type: string;
-};
+}
 
-type File = {
+interface File {
   content: string;
   encoding: string;
   filePath: string;
-};
+}
 
-type Entity = {
+interface Entity {
   id: string;
 }
 
@@ -82,71 +82,47 @@ export class EntityProvider {
     this.commits = new Commits(gitlabOptions);
   }
 
-  private _createEntity = (data: object): Entity => ({
-    ...data,
-    id: uuid(),
-  })
-
-  private _parseEntity = (file: File) => {
-    const content = JSON.parse(
-      Buffer.from(file.content, file.encoding).toString("utf8"),
-    );
-    return {
-      id: basename(file.filePath, extname(file.filePath)),
-      ...content,
-    };
-  };
-
-  private _stringifyEntity = (entity: Entity) => {
-    const { id, ...data } = entity
-    return JSON.stringify(data, null, 2);
-  };
-
-  private _getFilePath = (entityId: string) => {
-    return this.basePath + '/' + entityId + '.json'
-  }
-
-  async getList(params: ListParams): Promise<GetListOutput> {
+  public async getList(params: ListParams): Promise<GetListOutput> {
     const tree = (await this.repositories.tree(this.projectId, {
-      ref: this.ref,
       path: this.basePath,
+      ref: this.ref,
     })) as TreeFile[];
     const start = (params.pagination.page - 1) * params.pagination.perPage;
     const treeSliced = await tree.slice(start, start + params.pagination.perPage);
     const files = (await Promise.all(
-      treeSliced.map(treeFile =>
-        this.repositoryFiles.show(this.projectId, treeFile.path, this.ref),
+      treeSliced.map(ItreeFile =>
+        this.repositoryFiles.show(this.projectId, ItreeFile.path, this.ref),
       ),
     )) as File[];
     return {
-      data: files.map(this._parseEntity),
+      data: files.map(this.parseEntity),
       total: tree.length,
     };
   }
 
-  async getOne(params: GetOneParams): Promise<GetOneOutput> {
+  public async getOne(params: GetOneParams): Promise<GetOneOutput> {
     return {
-      data: this._parseEntity((await this.repositoryFiles.show(
+      data: this.parseEntity((await this.repositoryFiles.show(
         this.projectId,
-        this._getFilePath(params.id),
+        this.getFilePath(params.id),
         this.ref,
       )) as File),
     };
   }
 
-  async getMany(params: GetManyParams): Promise<GetManyOutput> {
+  public async getMany(params: GetManyParams): Promise<GetManyOutput> {
     const manyFiles = (await Promise.all(
       params.ids.map(id =>
-        this.repositoryFiles.show(this.projectId, this._getFilePath(id), this.ref),
+        this.repositoryFiles.show(this.projectId, this.getFilePath(id), this.ref),
       ),
     )) as File[];
     return {
-      data: manyFiles.map(this._parseEntity),
+      data: manyFiles.map(this.parseEntity),
     };
   }
 
-  async create(params: CreateParams): Promise<CreateOutput> {
-    const data = this._createEntity(params.data);
+  public async create(params: CreateParams): Promise<CreateOutput> {
+    const data = this.createEntity(params.data);
 
     await this.commits.create(
       this.projectId,
@@ -155,8 +131,8 @@ export class EntityProvider {
       [
         {
           action: "create",
-          filePath: this._getFilePath(data.id),
-          content: this._stringifyEntity(data),
+          content: this.stringifyEntity(data),
+          filePath: this.getFilePath(data.id),
         },
       ],
       {},
@@ -165,7 +141,7 @@ export class EntityProvider {
   }
 
   // TODO: check if data are equals, so skip commit
-  async update(params: UpdateParams): Promise<UpdateOutput> {
+  public async update(params: UpdateParams): Promise<UpdateOutput> {
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -173,8 +149,8 @@ export class EntityProvider {
       [
         {
           action: "update",
-          filePath: this._getFilePath(params.id),
-          content: this._stringifyEntity(params.data as Entity),
+          content: this.stringifyEntity(params.data as Entity),
+          filePath: this.getFilePath(params.id),
         },
       ],
       {},
@@ -182,7 +158,7 @@ export class EntityProvider {
     return { data: params.data };
   }
 
-  async delete(params: DeleteParams): Promise<DeleteOutput> {
+  public async delete(params: DeleteParams): Promise<DeleteOutput> {
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -190,7 +166,7 @@ export class EntityProvider {
       [
         {
           action: "delete",
-          filePath: this._getFilePath(params.id),
+          filePath: this.getFilePath(params.id),
         },
       ],
       {},
@@ -198,7 +174,7 @@ export class EntityProvider {
     return { data: params.previousData };
   }
 
-  async deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput> {
+  public async deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput> {
     const actions = params.ids.map(id => ({
       action: "delete" as "delete", // TS could be weird !
       filePath: id,
@@ -211,5 +187,29 @@ export class EntityProvider {
       {},
     );
     return { data: params.ids };
+  }
+
+  private createEntity = (data: object): Entity => ({
+    ...data,
+    id: uuid(),
+  })
+
+  private parseEntity = (file: File) => {
+    const content = JSON.parse(
+      Buffer.from(file.content, file.encoding).toString("utf8"),
+    );
+    return {
+      id: basename(file.filePath, extname(file.filePath)),
+      ...content,
+    };
+  };
+
+  private stringifyEntity = (entity: Entity) => {
+    const { id, ...data } = entity
+    return JSON.stringify(data, null, 2);
+  };
+
+  private getFilePath = (entityId: string) => {
+    return this.basePath + '/' + entityId + '.json'
   }
 }

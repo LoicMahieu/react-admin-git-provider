@@ -22,6 +22,7 @@
     "patch-package": "^5.1.1",
     "prettier": "^1.15.3",
     "tslint": "^5.12.0",
+    "tslint-config-prettier": "^1.17.0",
     "typescript": "^3.2.2"
   }
 }

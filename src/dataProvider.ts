@@ -1,14 +1,14 @@
 import { getToken } from "./authToken";
 import {
-  Params,
-  EntityProvider,
-  ListParams,
-  GetOneParams,
-  GetManyParams,
   CreateParams,
-  UpdateParams,
-  DeleteParams,
   DeleteManyParams,
+  DeleteParams,
+  EntityProvider,
+  GetManyParams,
+  GetOneParams,
+  ListParams,
+  Params,
+  UpdateParams,
 } from "./EntityProvider";
 
 export const dataProvider = ({
@@ -22,9 +22,9 @@ export const dataProvider = ({
   basePath: string;
   gitlabOptions: { host: string };
 }) => async (type: string, resource: string, params: Params) => {
-  const oauthToken = getToken() || undefined
+  const oauthToken = getToken() || undefined;
   if (!oauthToken) {
-    throw new Error('User is not logged.')
+    throw new Error("User is not logged.");
   }
 
   const entityProvider = new EntityProvider(
