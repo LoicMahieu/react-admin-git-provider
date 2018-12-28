@@ -1,5 +1,6 @@
 import { Repositories, RepositoryFiles, Commits } from "gitlab";
 import uuid from "uuid";
+import { basename, extname } from "path";
 
 export type ListParams = {
   pagination: {
@@ -60,6 +61,10 @@ type File = {
   filePath: string;
 };
 
+type Entity = {
+  id: string;
+}
+
 export class EntityProvider {
   private readonly repositories: Repositories;
   private readonly repositoryFiles: RepositoryFiles;
@@ -77,27 +82,29 @@ export class EntityProvider {
     this.commits = new Commits(gitlabOptions);
   }
 
-  private _createFile = (filePath: string, content: Object) => {
-    return {
-      id: filePath,
-      ...content,
-    };
-  };
+  private _createEntity = (data: object): Entity => ({
+    ...data,
+    id: uuid(),
+  })
 
   private _parseEntity = (file: File) => {
     const content = JSON.parse(
       Buffer.from(file.content, file.encoding).toString("utf8"),
     );
-    return this._createFile(file.filePath, content);
+    return {
+      id: basename(file.filePath, extname(file.filePath)),
+      ...content,
+    };
   };
 
-  private _stringifyEntity = (entity: Object) => {
-    return JSON.stringify(entity, null, 2);
+  private _stringifyEntity = (entity: Entity) => {
+    const { id, ...data } = entity
+    return JSON.stringify(data, null, 2);
   };
 
-  private _createId = () => {
-    return this.basePath + "/" + uuid();
-  };
+  private _getFilePath = (entityId: string) => {
+    return this.basePath + '/' + entityId + '.json'
+  }
 
   async getList(params: ListParams): Promise<GetListOutput> {
     const tree = (await this.repositories.tree(this.projectId, {
@@ -121,7 +128,7 @@ export class EntityProvider {
     return {
       data: this._parseEntity((await this.repositoryFiles.show(
         this.projectId,
-        params.id,
+        this._getFilePath(params.id),
         this.ref,
       )) as File),
     };
@@ -130,7 +137,7 @@ export class EntityProvider {
   async getMany(params: GetManyParams): Promise<GetManyOutput> {
     const manyFiles = (await Promise.all(
       params.ids.map(id =>
-        this.repositoryFiles.show(this.projectId, id, this.ref),
+        this.repositoryFiles.show(this.projectId, this._getFilePath(id), this.ref),
       ),
     )) as File[];
     return {
@@ -139,10 +146,7 @@ export class EntityProvider {
   }
 
   async create(params: CreateParams): Promise<CreateOutput> {
-    const data = {
-      ...params.data,
-      id: this._createId(),
-    };
+    const data = this._createEntity(params.data);
 
     await this.commits.create(
       this.projectId,
@@ -151,7 +155,7 @@ export class EntityProvider {
       [
         {
           action: "create",
-          filePath: data.id,
+          filePath: this._getFilePath(data.id),
           content: this._stringifyEntity(data),
         },
       ],
@@ -160,6 +164,7 @@ export class EntityProvider {
     return { data };
   }
 
+  // TODO: check if data are equals, so skip commit
   async update(params: UpdateParams): Promise<UpdateOutput> {
     await this.commits.create(
       this.projectId,
@@ -168,8 +173,8 @@ export class EntityProvider {
       [
         {
           action: "update",
-          filePath: params.id,
-          content: this._stringifyEntity(params.data),
+          filePath: this._getFilePath(params.id),
+          content: this._stringifyEntity(params.data as Entity),
         },
       ],
       {},
@@ -185,7 +190,7 @@ export class EntityProvider {
       [
         {
           action: "delete",
-          filePath: params.id,
+          filePath: this._getFilePath(params.id),
         },
       ],
       {},

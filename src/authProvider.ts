@@ -9,8 +9,6 @@ export interface AuthOptions {
 }
 
 export const authProvider = (options: AuthOptions) => (type: string, params: object) => {
-  console.log(type, params)
-
   if (type === "AUTH_LOGIN") {
     window.location.href = getRedirectUrl(options);
   }
