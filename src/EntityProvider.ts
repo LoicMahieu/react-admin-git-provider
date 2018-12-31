@@ -20,6 +20,10 @@ export interface GetOneParams {
 export interface GetManyParams {
   ids: string[];
 }
+export interface GetManyReferenceParams extends ListParams {
+  target: string;
+  id: string;
+}
 export interface CreateParams {
   data: object;
 }
@@ -72,7 +76,7 @@ export interface DeleteManyOutput {
 export interface GetManyOutput {
   data: Entity[];
 }
-// interface GetManyReferenceOutput { data: object[]; total: number }
+type GetManyReferenceOutput = GetManyOutput
 
 interface TreeFile {
   id: string;
@@ -178,6 +182,16 @@ export class EntityProvider {
     };
   }
 
+  public async getManyReference(params: GetManyReferenceParams): Promise<GetManyReferenceOutput> {
+    return this.getList({
+      ...params,
+      filter: {
+        [params.target]: params.id,
+        ...params.filter
+      }
+    })
+  }
+
   public async create(params: CreateParams): Promise<CreateOutput> {
     const data = this.createEntity(params.data);
 
@@ -233,7 +247,7 @@ export class EntityProvider {
     const newEntities = entities.map(entity => ({
       ...entity,
       ...params.data,
-    }))
+    }));
 
     await this.commits.create(
       this.projectId,

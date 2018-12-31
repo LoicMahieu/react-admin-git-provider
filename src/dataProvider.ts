@@ -5,6 +5,7 @@ import {
   DeleteParams,
   EntityProvider,
   GetManyParams,
+  GetManyReferenceParams,
   GetOneParams,
   ListParams,
   Params,
@@ -48,6 +49,9 @@ export const dataProvider = ({
     case "GET_MANY":
       return entityProvider.getMany(params as GetManyParams);
 
+    case "GET_MANY_REFERENCE":
+      return entityProvider.getManyReference(params as GetManyReferenceParams);
+
     case "CREATE":
       return entityProvider.create(params as CreateParams);
 
@@ -62,9 +66,6 @@ export const dataProvider = ({
 
     case "DELETE_MANY":
       return entityProvider.deleteMany(params as DeleteManyParams);
-
-    case "GET_MANY_REFERENCE":
-      throw new Error("TO IMPLEMENT");
 
     default:
       throw new Error(`Unsupported Data Provider request type ${type}`);
