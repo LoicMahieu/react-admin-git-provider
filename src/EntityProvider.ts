@@ -58,25 +58,17 @@ interface GetListOutput {
 export interface GetOneOutput {
   data: Entity;
 }
-interface CreateOutput {
-  data: Entity;
-}
-interface UpdateOutput {
-  data: Entity;
-}
+type CreateOutput = GetOneOutput
+type UpdateOutput = GetOneOutput
+type DeleteOutput = GetOneOutput
 export interface UpdateManyOutput {
   data: Entity[];
 }
-interface DeleteOutput {
-  data: Entity;
-}
+type GetManyOutput = UpdateManyOutput
+type GetManyReferenceOutput = GetManyOutput
 export interface DeleteManyOutput {
   data: string[];
 }
-export interface GetManyOutput {
-  data: Entity[];
-}
-type GetManyReferenceOutput = GetManyOutput
 
 interface TreeFile {
   id: string;
