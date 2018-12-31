@@ -6,6 +6,7 @@ import {
   Datagrid,
   TextField,
   BooleanField,
+  Filter,
   EditButton,
   DeleteButton,
   BulkDeleteButton,
@@ -25,7 +26,7 @@ import { LoginPage } from "./LoginPage";
 initialCheckForToken()
 
 const resourcePaths = {
-  users: "src/data/faq/entry",
+  users: "data/users",
 };
 
 const authProvider = createAuthProvider({
@@ -46,15 +47,17 @@ const dataProvider = (action, resource, params) => {
   return provider(action, resource, params);
 };
 
+const UserFilter = (props) => (
+  <Filter {...props}>
+    <TextInput label="Name (exact)" source="name" />
+  </Filter>
+);
+
 const UserList = props => (
-  <List {...props} bulkActionButtons={<BulkDeleteButton />}>
+  <List {...props} bulkActionButtons={<BulkDeleteButton />} filters={<UserFilter />}>
     <Datagrid rowClick="edit">
       {/* <TextField source="id" /> */}
-      <TextField source="title_fr" />
-      <TextField source="title_nl" />
-      <TextField source="siteProductRange" />
-      <TextField source="orderNumber" />
-      <BooleanField source="active" />
+      <TextField source="name" />
       <EditButton />
       <DeleteButton />
     </Datagrid>
@@ -64,11 +67,7 @@ const UserList = props => (
 const UserEdit = props => (
   <Edit {...props}>
     <SimpleForm>
-      <TextInput source="title_fr" />
-      <TextInput source="title_nl" />
-      <TextInput source="siteProductRange" />
-      <TextInput source="orderNumber" />
-      <BooleanInput source="active" />
+      <TextInput source="name" />
     </SimpleForm>
   </Edit>
 );
@@ -76,11 +75,7 @@ const UserEdit = props => (
 const UserCreate = props => (
   <Create {...props}>
     <SimpleForm>
-      <TextInput source="title_fr" />
-      <TextInput source="title_nl" />
-      <TextInput source="siteProductRange" />
-      <TextInput source="orderNumber" />
-      <BooleanInput source="active" />
+      <TextInput source="name" />
     </SimpleForm>
   </Create>
 );

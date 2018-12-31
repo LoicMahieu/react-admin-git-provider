@@ -1,4 +1,5 @@
 import { Commits, Repositories, RepositoryFiles } from "gitlab";
+import { filter, orderBy } from "lodash";
 import { basename, extname } from "path";
 import uuid from "uuid";
 
@@ -7,6 +8,11 @@ export interface ListParams {
     page: number;
     perPage: number;
   };
+  sort: {
+    field: string;
+    order: "ASC" | "DESC";
+  };
+  filter: object;
 }
 export interface GetOneParams {
   id: string;
@@ -37,13 +43,28 @@ export type Params =
   | DeleteParams
   | DeleteManyParams;
 
-interface GetListOutput { data: object[]; total: number }
-export interface GetOneOutput { data: object }
-interface CreateOutput { data: object }
-interface UpdateOutput { data: object }
-interface DeleteOutput { data: object }
-interface DeleteManyOutput { data: string[] }
-interface GetManyOutput { data: object[] }
+interface GetListOutput {
+  data: object[];
+  total: number;
+}
+export interface GetOneOutput {
+  data: object;
+}
+interface CreateOutput {
+  data: object;
+}
+interface UpdateOutput {
+  data: object;
+}
+interface DeleteOutput {
+  data: object;
+}
+interface DeleteManyOutput {
+  data: string[];
+}
+interface GetManyOutput {
+  data: object[];
+}
 // interface UpdateManyOutput { data: object[] }
 // interface GetManyReferenceOutput { data: object[]; total: number }
 
@@ -65,6 +86,22 @@ interface Entity {
   id: string;
 }
 
+const sortEntities = (entities: Entity[], params: ListParams): Entity[] => {
+  return orderBy(
+    entities,
+    [params.sort.field],
+    [params.sort.order.toLowerCase() as "asc" | "desc"],
+  );
+};
+const filterEntities = (entities: Entity[], params: ListParams): Entity[] => {
+  console.log(params)
+  return filter(entities, params.filter);
+};
+const paginateEntities = (entities: Entity[], params: ListParams): Entity[] => {
+  const start = (params.pagination.page - 1) * params.pagination.perPage;
+  return entities.slice(start, start + params.pagination.perPage);
+};
+
 export class EntityProvider {
   private readonly repositories: Repositories;
   private readonly repositoryFiles: RepositoryFiles;
@@ -73,7 +110,12 @@ export class EntityProvider {
   private readonly ref: string;
   private readonly basePath: string;
 
-  constructor(gitlabOptions: object, projectId: string, ref: string, basePath: string) {
+  constructor(
+    gitlabOptions: object,
+    projectId: string,
+    ref: string,
+    basePath: string,
+  ) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath;
@@ -87,15 +129,20 @@ export class EntityProvider {
       path: this.basePath,
       ref: this.ref,
     })) as TreeFile[];
-    const start = (params.pagination.page - 1) * params.pagination.perPage;
-    const treeSliced = await tree.slice(start, start + params.pagination.perPage);
     const files = (await Promise.all(
-      treeSliced.map(ItreeFile =>
+      tree.map(ItreeFile =>
         this.repositoryFiles.show(this.projectId, ItreeFile.path, this.ref),
       ),
     )) as File[];
+
     return {
-      data: files.map(this.parseEntity),
+      data: paginateEntities(
+        filterEntities(
+          sortEntities(files.map(this.parseEntity), params),
+          params,
+        ),
+        params,
+      ),
       total: tree.length,
     };
   }
@@ -113,7 +160,11 @@ export class EntityProvider {
   public async getMany(params: GetManyParams): Promise<GetManyOutput> {
     const manyFiles = (await Promise.all(
       params.ids.map(id =>
-        this.repositoryFiles.show(this.projectId, this.getFilePath(id), this.ref),
+        this.repositoryFiles.show(
+          this.projectId,
+          this.getFilePath(id),
+          this.ref,
+        ),
       ),
     )) as File[];
     return {
@@ -178,7 +229,7 @@ export class EntityProvider {
     const actions = params.ids.map(id => ({
       action: "delete" as "delete", // TS could be weird !
       filePath: id,
-    }))
+    }));
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -192,9 +243,9 @@ export class EntityProvider {
   private createEntity = (data: object): Entity => ({
     ...data,
     id: uuid(),
-  })
+  });
 
-  private parseEntity = (file: File) => {
+  private parseEntity = (file: File): Entity => {
     const content = JSON.parse(
       Buffer.from(file.content, file.encoding).toString("utf8"),
     );
@@ -205,11 +256,11 @@ export class EntityProvider {
   };
 
   private stringifyEntity = (entity: Entity) => {
-    const { id, ...data } = entity
+    const { id, ...data } = entity;
     return JSON.stringify(data, null, 2);
   };
 
   private getFilePath = (entityId: string) => {
-    return this.basePath + '/' + entityId + '.json'
-  }
+    return this.basePath + "/" + entityId + ".json";
+  };
 }
