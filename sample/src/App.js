@@ -15,7 +15,10 @@ import {
   SimpleForm,
   TextInput,
   BooleanInput,
+  crudUpdateMany,
 } from "react-admin";
+import { connect } from "react-redux";
+import { Button } from "@material-ui/core";
 import {
   authProvider as createAuthProvider,
   initialCheckForToken,
@@ -23,7 +26,7 @@ import {
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
-initialCheckForToken()
+initialCheckForToken();
 
 const resourcePaths = {
   users: "data/users",
@@ -47,16 +50,46 @@ const dataProvider = (action, resource, params) => {
   return provider(action, resource, params);
 };
 
-const UserFilter = (props) => (
+const UserFilter = props => (
   <Filter {...props}>
     <TextInput label="Name (exact)" source="name" />
   </Filter>
 );
 
+const UserBulkActionButtons = props => (
+  <>
+    <UpdateManyButton {...props} label="Set active" data={{ active: true }} />
+    <UpdateManyButton
+      {...props}
+      label="Set inactive"
+      data={{ active: false }}
+    />
+    <BulkDeleteButton {...props} />
+  </>
+);
+
+const UpdateManyButton = connect(
+  undefined,
+  { crudUpdateMany },
+)(({ basePath, crudUpdateMany, resource, selectedIds, data, label }) => (
+  <Button
+    onClick={() => {
+      crudUpdateMany(resource, selectedIds, data, basePath);
+    }}
+  >
+    {label}
+  </Button>
+));
+
 const UserList = props => (
-  <List {...props} bulkActionButtons={<BulkDeleteButton />} filters={<UserFilter />}>
+  <List
+    {...props}
+    bulkActionButtons={<UserBulkActionButtons />}
+    filters={<UserFilter />}
+  >
     <Datagrid rowClick="edit">
       {/* <TextField source="id" /> */}
+      <BooleanField source="active" />
       <TextField source="name" />
       <EditButton />
       <DeleteButton />
@@ -67,6 +100,7 @@ const UserList = props => (
 const UserEdit = props => (
   <Edit {...props}>
     <SimpleForm>
+      <BooleanInput source="active" />
       <TextInput source="name" />
     </SimpleForm>
   </Edit>
@@ -75,6 +109,7 @@ const UserEdit = props => (
 const UserCreate = props => (
   <Create {...props}>
     <SimpleForm>
+      <BooleanInput source="active" />
       <TextInput source="name" />
     </SimpleForm>
   </Create>

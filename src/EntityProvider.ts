@@ -27,6 +27,10 @@ export interface UpdateParams {
   id: string;
   data: object;
 }
+export interface UpdateManyParams {
+  ids: string[];
+  data: object;
+}
 export interface DeleteParams {
   id: string;
   previousData: object;
@@ -44,28 +48,30 @@ export type Params =
   | DeleteManyParams;
 
 interface GetListOutput {
-  data: object[];
+  data: Entity[];
   total: number;
 }
 export interface GetOneOutput {
-  data: object;
+  data: Entity;
 }
 interface CreateOutput {
-  data: object;
+  data: Entity;
 }
 interface UpdateOutput {
-  data: object;
+  data: Entity;
+}
+export interface UpdateManyOutput {
+  data: Entity[];
 }
 interface DeleteOutput {
-  data: object;
+  data: Entity;
 }
-interface DeleteManyOutput {
+export interface DeleteManyOutput {
   data: string[];
 }
-interface GetManyOutput {
-  data: object[];
+export interface GetManyOutput {
+  data: Entity[];
 }
-// interface UpdateManyOutput { data: object[] }
 // interface GetManyReferenceOutput { data: object[]; total: number }
 
 interface TreeFile {
@@ -94,7 +100,7 @@ const sortEntities = (entities: Entity[], params: ListParams): Entity[] => {
   );
 };
 const filterEntities = (entities: Entity[], params: ListParams): Entity[] => {
-  console.log(params)
+  console.log(params);
   return filter(entities, params.filter);
 };
 const paginateEntities = (entities: Entity[], params: ListParams): Entity[] => {
@@ -206,7 +212,44 @@ export class EntityProvider {
       ],
       {},
     );
-    return { data: params.data };
+    return {
+      data: {
+        id: params.id,
+        ...params.data,
+      },
+    };
+  }
+
+  public async updateMany(params: UpdateManyParams): Promise<UpdateManyOutput> {
+    const entities = await Promise.all(
+      params.ids.map(
+        async id =>
+          (await this.getOne({
+            id,
+          })).data,
+      ),
+    );
+
+    const newEntities = entities.map(entity => ({
+      ...entity,
+      ...params.data,
+    }))
+
+    await this.commits.create(
+      this.projectId,
+      this.ref,
+      "Update many",
+      newEntities.map(entity => ({
+        action: "update" as "update",
+        content: this.stringifyEntity(entity),
+        filePath: this.getFilePath(entity.id),
+      })),
+      {},
+    );
+
+    return {
+      data: newEntities,
+    };
   }
 
   public async delete(params: DeleteParams): Promise<DeleteOutput> {
@@ -222,7 +265,12 @@ export class EntityProvider {
       ],
       {},
     );
-    return { data: params.previousData };
+    return {
+      data: {
+        id: params.id,
+        ...params.previousData,
+      },
+    };
   }
 
   public async deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput> {

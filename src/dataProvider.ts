@@ -8,6 +8,7 @@ import {
   GetOneParams,
   ListParams,
   Params,
+  UpdateManyParams,
   UpdateParams,
 } from "./EntityProvider";
 
@@ -54,7 +55,7 @@ export const dataProvider = ({
       return entityProvider.update(params as UpdateParams);
 
     case "UPDATE_MANY":
-      throw new Error("TO IMPLEMENT");
+      return entityProvider.updateMany(params as UpdateManyParams);
 
     case "DELETE":
       return entityProvider.delete(params as DeleteParams);
