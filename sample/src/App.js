@@ -30,31 +30,29 @@ import { LoginPage } from "./LoginPage";
 
 initialCheckForToken();
 
-const baseProviderOptions = {
-  projectId: process.env.GITLAB_PROJECT_ID,
-  ref: process.env.GITLAB_REF,
-
-  gitlabOptions: {
-    host: process.env.GITLAB_API,
-  },
-};
-
-const resourceProviders = {
-  users: createDataProviderEntity({ ...baseProviderOptions, basePath: "data/users" }),
-  categories: createDataProviderEntity({
-    ...baseProviderOptions,
-    basePath: "data/categories",
-  }),
-  pipelines: createDataProviderPipeline(baseProviderOptions),
-};
-
 const authProvider = createAuthProvider({
   baseUrl: process.env.GITLAB_OAUTH_BASE_URL,
   clientId: process.env.GITLAB_OAUTH_CLIENT_ID,
 });
 
+const baseProviderOptions = {
+  projectId: process.env.GITLAB_PROJECT_ID,
+  ref: process.env.GITLAB_REF,
+  gitlabOptions: {
+    host: process.env.GITLAB_API,
+  },
+};
+
+const dataProviderEntity = createDataProviderEntity({
+  ...baseProviderOptions,
+  basePath: (resource) => `data/${resource}`,
+})
+const dataProviderPipeline = createDataProviderPipeline({
+  ...baseProviderOptions,
+})
 const dataProvider = (action, resource, params) => {
-  return resourceProviders[resource](action, resource, params);
+  if (resource === 'pipelines') return dataProviderPipeline(action, resource, params)
+  else return dataProviderEntity(action, resource, params)
 };
 
 const UserFilter = props => (

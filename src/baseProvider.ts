@@ -54,13 +54,22 @@ export const createGitlabOptions = (gitlabOptions: object) => ({
   oauthToken: getToken(),
 });
 
-export const createRAProvider = (
-  provider: ProviderEntity | PipelineProvider,
-) => async (type: string, resource: string, params: Params) => {
+type GetProviderOption =
+  | ProviderEntity
+  | PipelineProvider
+  | ((resource: string) => ProviderEntity | PipelineProvider);
+
+export const createRAProvider = (getProvider: GetProviderOption) => async (
+  type: string,
+  resource: string,
+  params: Params,
+) => {
   const oauthToken = getToken() || undefined;
   if (!oauthToken) {
     throw new Error("User is not logged.");
   }
+  const provider =
+    typeof getProvider === "function" ? getProvider(resource) : getProvider;
   switch (type) {
     case "GET_LIST":
       return provider.getList(params as ListParams);

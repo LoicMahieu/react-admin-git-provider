@@ -6,22 +6,27 @@ import { PipelineProvider } from "./ProviderPipeline";
 export const createDataProviderEntity = ({
   projectId,
   ref,
-  basePath,
+  basePath: getBasePath,
   gitlabOptions,
 }: {
   projectId: string;
   ref: string;
-  basePath: string;
+  basePath: string | ((resource: string) => string);
   gitlabOptions: { host: string };
-}) =>
-  createRAProvider(
+}) => {
+  const create = (basePath: string) =>
     new ProviderEntity(
       createGitlabOptions(gitlabOptions),
       projectId,
       ref,
       basePath,
-    ),
+    );
+  return createRAProvider(
+    typeof getBasePath === "function"
+      ? resource => create(getBasePath(resource))
+      : create(getBasePath),
   );
+};
 
 export const createDataProviderPipeline = ({
   projectId,
