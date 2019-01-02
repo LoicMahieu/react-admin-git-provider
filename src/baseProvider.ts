@@ -49,16 +49,10 @@ export type Params =
   | DeleteParams
   | DeleteManyParams;
 
-export const createGitlabOptions = (gitlabOptions: object) => {
-  const oauthToken = getToken() || undefined;
-  if (!oauthToken) {
-    throw new Error("User is not logged.");
-  }
-  return {
-    ...gitlabOptions,
-    oauthToken,
-  };
-};
+export const createGitlabOptions = (gitlabOptions: object) => ({
+  ...gitlabOptions,
+  oauthToken: getToken(),
+});
 
 export const createRAProvider = (
   provider: ProviderEntity | PipelineProvider,
