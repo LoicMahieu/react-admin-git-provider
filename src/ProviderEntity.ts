@@ -225,7 +225,7 @@ export class ProviderEntity implements IProvider {
 
   public async deleteMany(params: DeleteManyParams) {
     const actions = params.ids.map(id => ({
-      action: "delete" as "delete", // TS could be weird !
+      action: "delete" as "delete",
       filePath: id,
     }));
     await this.commits.create(

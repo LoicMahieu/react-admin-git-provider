@@ -3,7 +3,7 @@ import { createGitlabOptions, createRAProvider } from "./baseProvider";
 import { ProviderEntity } from "./ProviderEntity";
 import { PipelineProvider } from "./ProviderPipeline";
 
-export const createDataProvider = ({
+export const createDataProviderEntity = ({
   projectId,
   ref,
   basePath,
@@ -23,7 +23,7 @@ export const createDataProvider = ({
     ),
   );
 
-export const createPipelineProvider = ({
+export const createDataProviderPipeline = ({
   projectId,
   ref,
   gitlabOptions,

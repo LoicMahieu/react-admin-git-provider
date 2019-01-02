@@ -23,15 +23,29 @@ import { Button } from "@material-ui/core";
 import {
   createAuthProvider,
   initialCheckForToken,
-  createPipelineProvider,
-  createDataProvider,
+  createDataProviderPipeline,
+  createDataProviderEntity,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
 initialCheckForToken();
 
-const resourcePaths = {
-  users: "data/users",
+const baseProviderOptions = {
+  projectId: process.env.GITLAB_PROJECT_ID,
+  ref: process.env.GITLAB_REF,
+
+  gitlabOptions: {
+    host: process.env.GITLAB_API,
+  },
+};
+
+const resourceProviders = {
+  users: createDataProviderEntity({ ...baseProviderOptions, basePath: "data/users" }),
+  categories: createDataProviderEntity({
+    ...baseProviderOptions,
+    basePath: "data/categories",
+  }),
+  pipelines: createDataProviderPipeline(baseProviderOptions),
 };
 
 const authProvider = createAuthProvider({
@@ -40,28 +54,7 @@ const authProvider = createAuthProvider({
 });
 
 const dataProvider = (action, resource, params) => {
-  if (resource === "pipelines") {
-    const provider = createPipelineProvider({
-      projectId: process.env.GITLAB_PROJECT_ID,
-      ref: process.env.GITLAB_REF,
-
-      gitlabOptions: {
-        host: process.env.GITLAB_API,
-      },
-    });
-    return provider(action, resource, params);
-  }
-
-  const provider = createDataProvider({
-    projectId: process.env.GITLAB_PROJECT_ID,
-    ref: process.env.GITLAB_REF,
-    basePath: resourcePaths[resource],
-
-    gitlabOptions: {
-      host: process.env.GITLAB_API,
-    },
-  });
-  return provider(action, resource, params);
+  return resourceProviders[resource](action, resource, params);
 };
 
 const UserFilter = props => (
@@ -161,6 +154,12 @@ const App = () => (
   >
     <Resource
       name="users"
+      list={UserList}
+      edit={UserEdit}
+      create={UserCreate}
+    />
+    <Resource
+      name="categories"
       list={UserList}
       edit={UserEdit}
       create={UserCreate}
