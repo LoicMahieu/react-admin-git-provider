@@ -1,6 +1,7 @@
 {
   "name": "react-admin-gitlab-provider",
   "version": "0.0.10",
+  "files": ["lib/*"],
   "main": "./lib/index.js",
   "author": "Loïc Mahieu <mahieuloic@gmail.com>",
   "license": "MIT",
