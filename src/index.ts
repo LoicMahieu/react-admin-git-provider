@@ -1,9 +1,9 @@
-export { authProvider, initialCheckForToken } from "./authProvider";
+export { createAuthProvider, initialCheckForToken } from "./authProvider";
 import { createGitlabOptions, createRAProvider } from "./baseProvider";
 import { ProviderEntity } from "./ProviderEntity";
 import { PipelineProvider } from "./ProviderPipeline";
 
-export const dataProvider = ({
+export const createDataProvider = ({
   projectId,
   ref,
   basePath,
@@ -23,7 +23,7 @@ export const dataProvider = ({
     ),
   );
 
-export const pipelineProvider = ({
+export const createPipelineProvider = ({
   projectId,
   ref,
   gitlabOptions,

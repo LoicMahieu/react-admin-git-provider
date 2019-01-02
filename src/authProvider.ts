@@ -18,7 +18,7 @@ export const initialCheckForToken = () => {
   }
 };
 
-export const authProvider = (options: AuthOptions) => (
+export const createAuthProvider = (options: AuthOptions) => (
   type: string,
   params: object,
 ) => {

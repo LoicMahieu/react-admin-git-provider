@@ -21,10 +21,10 @@ import {
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
 import {
-  authProvider as createAuthProvider,
+  createAuthProvider,
   initialCheckForToken,
-  pipelineProvider as createPipelineProvider,
-  dataProvider as createDataProvider,
+  createPipelineProvider,
+  createDataProvider,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
