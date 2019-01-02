@@ -16,6 +16,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "./IProvider";
+import { cacheStoreGetOrSet } from "./utils";
 
 interface TreeFile {
   id: string;
@@ -26,6 +27,7 @@ interface TreeFile {
 }
 
 interface File {
+  blobId: string;
   content: string;
   encoding: string;
   filePath: string;
@@ -70,8 +72,8 @@ export class ProviderEntity implements IProvider {
     this.commits = new Commits(gitlabOptions);
     this.cacheStore = createCacheInstance({
       name: "react-admin-gitlab",
-      storeName: "entities"
-    })
+      storeName: "entities",
+    });
   }
 
   public async getList(params: ListParams) {
@@ -81,14 +83,13 @@ export class ProviderEntity implements IProvider {
     })) as TreeFile[];
     const files = (await Promise.all(
       tree.map(async treeFile => {
-        const cacheKey = treeFile.id
-        const cached = await this.cacheStore.getItem(cacheKey)
-        if (cached) {
-          return cached
-        }
-        const file = this.repositoryFiles.show(this.projectId, treeFile.path, this.ref)
-        await this.cacheStore.setItem(cacheKey, file)
-        return file
+        return cacheStoreGetOrSet(
+          this.cacheStore,
+          treeFile.path,
+          () =>
+            this.repositoryFiles.show(this.projectId, treeFile.path, this.ref),
+          (cached: { blobId?: string }) => cached.blobId === treeFile.id,
+        );
       }),
     )) as File[];
 
@@ -129,9 +130,7 @@ export class ProviderEntity implements IProvider {
     };
   }
 
-  public async getManyReference(
-    params: GetManyReferenceParams,
-  ) {
+  public async getManyReference(params: GetManyReferenceParams) {
     return this.getList({
       ...params,
       filter: {

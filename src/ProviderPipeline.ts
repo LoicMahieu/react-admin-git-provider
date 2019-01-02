@@ -1,4 +1,5 @@
 import { Pipelines } from "gitlab";
+import { createInstance as createCacheInstance } from "localforage";
 import {
   CreateParams,
   DeleteManyParams,
@@ -11,27 +12,43 @@ import {
   UpdateParams,
 } from "./baseProvider";
 import { IProvider, Record } from "./IProvider";
+import { cacheStoreGetOrSet } from "./utils";
+
+interface IPipeline {
+  id: number;
+  sha: string;
+}
 
 export class PipelineProvider implements IProvider {
   private readonly pipelines: Pipelines;
   private readonly projectId: string;
   private readonly ref: string;
+  private readonly cacheStore: LocalForage;
 
   constructor(gitlabOptions: object, projectId: string, ref: string) {
     this.projectId = projectId;
     this.ref = ref;
     this.pipelines = new Pipelines(gitlabOptions);
+    this.cacheStore = createCacheInstance({
+      name: "react-admin-gitlab",
+      storeName: "pipelines",
+    });
   }
 
   public async getList(params: ListParams) {
     const pipelineList = (await this.pipelines.all(this.projectId, {
       ref: this.ref,
-    })) as Array<{
-      id: number;
-    }>;
+    })) as IPipeline[];
     const pipelines = (await Promise.all(
-      pipelineList.map((pipeline: { id: number }) =>
-        this.pipelines.show(this.projectId, pipeline.id),
+      pipelineList.map(pipeline =>
+        cacheStoreGetOrSet(
+          this.cacheStore,
+          `${pipeline.id}`,
+          () => this.pipelines.show(this.projectId, pipeline.id),
+          (cached: { sha?: string }) => {
+            return cached.sha === pipeline.sha
+          },
+        ),
       ),
     )) as Record[];
 
