@@ -1,4 +1,5 @@
 import { Commits, Repositories, RepositoryFiles } from "gitlab";
+import { createInstance as createCacheInstance } from "localforage";
 import { filter, orderBy } from "lodash";
 import { basename, extname } from "path";
 import uuid from "uuid";
@@ -53,6 +54,7 @@ export class ProviderEntity implements IProvider {
   private readonly projectId: string;
   private readonly ref: string;
   private readonly basePath: string;
+  private readonly cacheStore: LocalForage;
 
   constructor(
     gitlabOptions: object,
@@ -66,6 +68,10 @@ export class ProviderEntity implements IProvider {
     this.repositories = new Repositories(gitlabOptions);
     this.repositoryFiles = new RepositoryFiles(gitlabOptions);
     this.commits = new Commits(gitlabOptions);
+    this.cacheStore = createCacheInstance({
+      name: "react-admin-gitlab",
+      storeName: "entities"
+    })
   }
 
   public async getList(params: ListParams) {
@@ -74,9 +80,16 @@ export class ProviderEntity implements IProvider {
       ref: this.ref,
     })) as TreeFile[];
     const files = (await Promise.all(
-      tree.map(ItreeFile =>
-        this.repositoryFiles.show(this.projectId, ItreeFile.path, this.ref),
-      ),
+      tree.map(async treeFile => {
+        const cacheKey = treeFile.id
+        const cached = await this.cacheStore.getItem(cacheKey)
+        if (cached) {
+          return cached
+        }
+        const file = this.repositoryFiles.show(this.projectId, treeFile.path, this.ref)
+        await this.cacheStore.setItem(cacheKey, file)
+        return file
+      }),
     )) as File[];
 
     return {
