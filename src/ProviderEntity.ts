@@ -2,73 +2,19 @@ import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import { filter, orderBy } from "lodash";
 import { basename, extname } from "path";
 import uuid from "uuid";
-
-export interface ListParams {
-  pagination: {
-    page: number;
-    perPage: number;
-  };
-  sort: {
-    field: string;
-    order: "ASC" | "DESC";
-  };
-  filter: object;
-}
-export interface GetOneParams {
-  id: string;
-}
-export interface GetManyParams {
-  ids: string[];
-}
-export interface GetManyReferenceParams extends ListParams {
-  target: string;
-  id: string;
-}
-export interface CreateParams {
-  data: object;
-}
-export interface UpdateParams {
-  id: string;
-  data: object;
-}
-export interface UpdateManyParams {
-  ids: string[];
-  data: object;
-}
-export interface DeleteParams {
-  id: string;
-  previousData: object;
-}
-export interface DeleteManyParams {
-  ids: string[];
-}
-export type Params =
-  | ListParams
-  | GetOneParams
-  | GetManyParams
-  | CreateParams
-  | UpdateParams
-  | DeleteParams
-  | DeleteManyParams;
-
-interface GetListOutput {
-  data: Entity[];
-  total: number;
-}
-export interface GetOneOutput {
-  data: Entity;
-}
-type CreateOutput = GetOneOutput
-type UpdateOutput = GetOneOutput
-type DeleteOutput = GetOneOutput
-export interface UpdateManyOutput {
-  data: Entity[];
-}
-type GetManyOutput = UpdateManyOutput
-type GetManyReferenceOutput = GetManyOutput
-export interface DeleteManyOutput {
-  data: string[];
-}
+import {
+  CreateParams,
+  DeleteManyParams,
+  DeleteParams,
+  GetManyParams,
+  GetManyReferenceParams,
+  GetOneParams,
+  IProvider,
+  ListParams,
+  Record,
+  UpdateManyParams,
+  UpdateParams,
+} from "./IProvider";
 
 interface TreeFile {
   id: string;
@@ -84,27 +30,23 @@ interface File {
   filePath: string;
 }
 
-interface Entity {
-  id: string;
-}
-
-const sortEntities = (entities: Entity[], params: ListParams): Entity[] => {
+const sortEntities = (entities: Record[], params: ListParams): Record[] => {
   return orderBy(
     entities,
     [params.sort.field],
     [params.sort.order.toLowerCase() as "asc" | "desc"],
   );
 };
-const filterEntities = (entities: Entity[], params: ListParams): Entity[] => {
+const filterEntities = (entities: Record[], params: ListParams): Record[] => {
   console.log(params);
   return filter(entities, params.filter);
 };
-const paginateEntities = (entities: Entity[], params: ListParams): Entity[] => {
+const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
   const start = (params.pagination.page - 1) * params.pagination.perPage;
   return entities.slice(start, start + params.pagination.perPage);
 };
 
-export class EntityProvider {
+export class ProviderEntity implements IProvider {
   private readonly repositories: Repositories;
   private readonly repositoryFiles: RepositoryFiles;
   private readonly commits: Commits;
@@ -126,7 +68,7 @@ export class EntityProvider {
     this.commits = new Commits(gitlabOptions);
   }
 
-  public async getList(params: ListParams): Promise<GetListOutput> {
+  public async getList(params: ListParams) {
     const tree = (await this.repositories.tree(this.projectId, {
       path: this.basePath,
       ref: this.ref,
@@ -149,7 +91,7 @@ export class EntityProvider {
     };
   }
 
-  public async getOne(params: GetOneParams): Promise<GetOneOutput> {
+  public async getOne(params: GetOneParams) {
     return {
       data: this.parseEntity((await this.repositoryFiles.show(
         this.projectId,
@@ -159,7 +101,7 @@ export class EntityProvider {
     };
   }
 
-  public async getMany(params: GetManyParams): Promise<GetManyOutput> {
+  public async getMany(params: GetManyParams) {
     const manyFiles = (await Promise.all(
       params.ids.map(id =>
         this.repositoryFiles.show(
@@ -174,17 +116,19 @@ export class EntityProvider {
     };
   }
 
-  public async getManyReference(params: GetManyReferenceParams): Promise<GetManyReferenceOutput> {
+  public async getManyReference(
+    params: GetManyReferenceParams,
+  ) {
     return this.getList({
       ...params,
       filter: {
         [params.target]: params.id,
-        ...params.filter
-      }
-    })
+        ...params.filter,
+      },
+    });
   }
 
-  public async create(params: CreateParams): Promise<CreateOutput> {
+  public async create(params: CreateParams) {
     const data = this.createEntity(params.data);
 
     await this.commits.create(
@@ -204,7 +148,7 @@ export class EntityProvider {
   }
 
   // TODO: check if data are equals, so skip commit
-  public async update(params: UpdateParams): Promise<UpdateOutput> {
+  public async update(params: UpdateParams) {
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -212,7 +156,7 @@ export class EntityProvider {
       [
         {
           action: "update",
-          content: this.stringifyEntity(params.data as Entity),
+          content: this.stringifyEntity(params.data as Record),
           filePath: this.getFilePath(params.id),
         },
       ],
@@ -226,7 +170,7 @@ export class EntityProvider {
     };
   }
 
-  public async updateMany(params: UpdateManyParams): Promise<UpdateManyOutput> {
+  public async updateMany(params: UpdateManyParams) {
     const entities = await Promise.all(
       params.ids.map(
         async id =>
@@ -258,7 +202,7 @@ export class EntityProvider {
     };
   }
 
-  public async delete(params: DeleteParams): Promise<DeleteOutput> {
+  public async delete(params: DeleteParams) {
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -279,7 +223,7 @@ export class EntityProvider {
     };
   }
 
-  public async deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput> {
+  public async deleteMany(params: DeleteManyParams) {
     const actions = params.ids.map(id => ({
       action: "delete" as "delete", // TS could be weird !
       filePath: id,
@@ -294,12 +238,12 @@ export class EntityProvider {
     return { data: params.ids };
   }
 
-  private createEntity = (data: object): Entity => ({
+  private createEntity = (data: object): Record => ({
     ...data,
     id: uuid(),
   });
 
-  private parseEntity = (file: File): Entity => {
+  private parseEntity = (file: File): Record => {
     const content = JSON.parse(
       Buffer.from(file.content, file.encoding).toString("utf8"),
     );
@@ -309,12 +253,12 @@ export class EntityProvider {
     };
   };
 
-  private stringifyEntity = (entity: Entity) => {
+  private stringifyEntity = (entity: Record) => {
     const { id, ...data } = entity;
     return JSON.stringify(data, null, 2);
   };
 
-  private getFilePath = (entityId: string) => {
+  private getFilePath = (entityId: string | number) => {
     return this.basePath + "/" + entityId + ".json";
   };
 }

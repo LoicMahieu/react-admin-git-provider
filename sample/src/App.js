@@ -16,12 +16,14 @@ import {
   TextInput,
   BooleanInput,
   crudUpdateMany,
+  ListGuesser,
 } from "react-admin";
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
 import {
   authProvider as createAuthProvider,
   initialCheckForToken,
+  pipelineProvider as createPipelineProvider,
   dataProvider as createDataProvider,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
@@ -38,6 +40,18 @@ const authProvider = createAuthProvider({
 });
 
 const dataProvider = (action, resource, params) => {
+  if (resource === "pipelines") {
+    const provider = createPipelineProvider({
+      projectId: process.env.GITLAB_PROJECT_ID,
+      ref: process.env.GITLAB_REF,
+
+      gitlabOptions: {
+        host: process.env.GITLAB_API,
+      },
+    });
+    return provider(action, resource, params);
+  }
+
   const provider = createDataProvider({
     projectId: process.env.GITLAB_PROJECT_ID,
     ref: process.env.GITLAB_REF,
@@ -115,6 +129,30 @@ const UserCreate = props => (
   </Create>
 );
 
+const PipelineList = props => (
+  <List {...props}>
+    <Datagrid rowClick="edit">
+      <TextField source="id" />
+      <TextField source="status" />
+      <TextField label="User" source="user.name" />
+      {/* <TextField source="sha" />
+      <TextField source="ref" />
+      <TextField source="webUrl" />
+      <TextField source="beforeSha" />
+      <BooleanField source="tag" />
+      <TextField source="yamlErrors" />
+      <NumberField source="user.id" />
+      <DateField source="createdAt" />
+      <DateField source="updatedAt" />
+      <DateField source="startedAt" />
+      <DateField source="finishedAt" />
+      <TextField source="committedAt" />
+      <NumberField source="duration" />
+      <TextField source="coverage" /> */}
+    </Datagrid>
+  </List>
+);
+
 const App = () => (
   <Admin
     dataProvider={dataProvider}
@@ -127,6 +165,7 @@ const App = () => (
       edit={UserEdit}
       create={UserCreate}
     />
+    <Resource name="pipelines" list={PipelineList} />
   </Admin>
 );
 
