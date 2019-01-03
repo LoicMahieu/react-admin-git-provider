@@ -1,5 +1,5 @@
 import querystring from "querystring";
-import uuid = require("uuid");
+import uuid from "uuid";
 import { getToken, removeToken, setToken } from "./authToken";
 
 export interface AuthOptions {

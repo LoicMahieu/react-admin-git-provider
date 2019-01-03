@@ -42,7 +42,6 @@ const sortEntities = (entities: Record[], params: ListParams): Record[] => {
   );
 };
 const filterEntities = (entities: Record[], params: ListParams): Record[] => {
-  console.log(params);
   return filter(entities, params.filter);
 };
 const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
