@@ -25,6 +25,7 @@ import {
   initialCheckForToken,
   createDataProviderPipeline,
   createDataProviderEntity,
+  createDataProviderBranch,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
@@ -50,8 +51,12 @@ const dataProviderEntity = createDataProviderEntity({
 const dataProviderPipeline = createDataProviderPipeline({
   ...baseProviderOptions,
 })
+const dataProviderBranch = createDataProviderBranch({
+  ...baseProviderOptions,
+})
 const dataProvider = (action, resource, params) => {
   if (resource === 'pipelines') return dataProviderPipeline(action, resource, params)
+  if (resource === 'branches') return dataProviderBranch(action, resource, params)
   else return dataProviderEntity(action, resource, params)
 };
 
@@ -163,6 +168,7 @@ const App = () => (
       create={UserCreate}
     />
     <Resource name="pipelines" list={PipelineList} />
+    <Resource name="branches" list={ListGuesser} />
   </Admin>
 );
 

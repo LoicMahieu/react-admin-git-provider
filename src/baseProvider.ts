@@ -1,6 +1,5 @@
 import { getToken } from "./authToken";
-import { ProviderEntity } from "./ProviderEntity";
-import { PipelineProvider } from "./ProviderPipeline";
+import { IProvider } from "./IProvider";
 export interface ListParams {
   pagination: {
     page: number;
@@ -55,9 +54,8 @@ export const createGitlabOptions = (gitlabOptions: object) => ({
 });
 
 type GetProviderOption =
-  | ProviderEntity
-  | PipelineProvider
-  | ((resource: string) => ProviderEntity | PipelineProvider);
+  | IProvider
+  | ((resource: string) => IProvider);
 
 export const createRAProvider = (getProvider: GetProviderOption) => async (
   type: string,
