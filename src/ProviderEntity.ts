@@ -150,16 +150,17 @@ export class ProviderEntity implements IProvider {
 
   public async create(params: CreateParams) {
     const data = this.createEntity(params.data);
+    const filePath = this.getFilePath(data.id)
 
     await this.commits.create(
       this.projectId,
       this.ref,
-      "Create",
+      `Create ${filePath}`,
       [
         {
           action: "create",
           content: this.stringifyEntity(data),
-          filePath: this.getFilePath(data.id),
+          filePath,
         },
       ],
       {},
@@ -169,10 +170,11 @@ export class ProviderEntity implements IProvider {
 
   // TODO: check if data are equals, so skip commit
   public async update(params: UpdateParams) {
+    const filePath = this.getFilePath(params.id)
     await this.commits.create(
       this.projectId,
       this.ref,
-      "Update",
+      `Update ${filePath}`,
       [
         {
           action: "update",
@@ -208,7 +210,7 @@ export class ProviderEntity implements IProvider {
     await this.commits.create(
       this.projectId,
       this.ref,
-      "Update many",
+      `Update many in ${this.basePath}`,
       newEntities.map(entity => ({
         action: "update" as "update",
         content: this.stringifyEntity(entity),
@@ -223,14 +225,15 @@ export class ProviderEntity implements IProvider {
   }
 
   public async delete(params: DeleteParams) {
+    const filePath = this.getFilePath(params.id)
     await this.commits.create(
       this.projectId,
       this.ref,
-      "Delete",
+      `Delete ${filePath}`,
       [
         {
           action: "delete",
-          filePath: this.getFilePath(params.id),
+          filePath,
         },
       ],
       {},
@@ -251,7 +254,7 @@ export class ProviderEntity implements IProvider {
     await this.commits.create(
       this.projectId,
       this.ref,
-      "Delete many",
+      `Delete many in ${this.basePath}`,
       actions,
       {},
     );
