@@ -17,6 +17,8 @@ import {
   BooleanInput,
   crudUpdateMany,
   ListGuesser,
+  DateField,
+  ReferenceArrayField,
 } from "react-admin";
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
@@ -26,6 +28,7 @@ import {
   createDataProviderPipeline,
   createDataProviderEntity,
   createDataProviderBranch,
+  createDataProviderCommit,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
@@ -46,18 +49,25 @@ const baseProviderOptions = {
 
 const dataProviderEntity = createDataProviderEntity({
   ...baseProviderOptions,
-  basePath: (resource) => `data/${resource}`,
-})
+  basePath: resource => `data/${resource}`,
+});
 const dataProviderPipeline = createDataProviderPipeline({
   ...baseProviderOptions,
-})
+});
 const dataProviderBranch = createDataProviderBranch({
   ...baseProviderOptions,
-})
+});
+const dataProviderCommit = createDataProviderCommit({
+  ...baseProviderOptions,
+});
 const dataProvider = (action, resource, params) => {
-  if (resource === 'pipelines') return dataProviderPipeline(action, resource, params)
-  if (resource === 'branches') return dataProviderBranch(action, resource, params)
-  else return dataProviderEntity(action, resource, params)
+  if (resource === "pipelines")
+    return dataProviderPipeline(action, resource, params);
+  if (resource === "branches")
+    return dataProviderBranch(action, resource, params);
+  if (resource === "commits")
+    return dataProviderCommit(action, resource, params);
+  else return dataProviderEntity(action, resource, params);
 };
 
 const UserFilter = props => (
@@ -148,6 +158,24 @@ const PipelineList = props => (
     </Datagrid>
   </List>
 );
+export const CommitList = props => (
+  <List {...props}>
+    <Datagrid rowClick="edit">
+      <TextField source="id" />
+      {/* <ReferenceField source="shortId" reference="shorts"><TextField source="id" /></ReferenceField> */}
+      <TextField source="title" />
+      <DateField source="createdAt" />
+      {/* <ReferenceArrayField source="parentIds" reference="commits"><TextField source="id" /></ReferenceArrayField> */}
+      <TextField source="message" />
+      <TextField source="authorName" />
+      <TextField source="authorEmail" />
+      <DateField source="authoredDate" />
+      <TextField source="committerName" />
+      <TextField source="committerEmail" />
+      <DateField source="committedDate" />
+    </Datagrid>
+  </List>
+);
 
 const App = () => (
   <Admin
@@ -169,6 +197,7 @@ const App = () => (
     />
     <Resource name="pipelines" list={PipelineList} />
     <Resource name="branches" list={ListGuesser} />
+    <Resource name="commits" list={CommitList} />
   </Admin>
 );
 
