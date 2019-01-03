@@ -1,6 +1,7 @@
 import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import { createInstance as createCacheInstance } from "localforage";
 import { filter, orderBy } from "lodash";
+import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
 import {
@@ -81,16 +82,23 @@ export class ProviderEntity implements IProvider {
       path: this.basePath,
       ref: this.ref,
     })) as TreeFile[];
+    const limit = pLimit(5);
     const files = (await Promise.all(
-      tree.map(async treeFile => {
-        return cacheStoreGetOrSet(
+      tree.map(async treeFile =>
+        cacheStoreGetOrSet(
           this.cacheStore,
           treeFile.path,
           () =>
-            this.repositoryFiles.show(this.projectId, treeFile.path, this.ref),
+            limit(() =>
+              this.repositoryFiles.show(
+                this.projectId,
+                treeFile.path,
+                this.ref,
+              ),
+            ),
           (cached: { blobId?: string }) => cached.blobId === treeFile.id,
-        );
-      }),
+        ),
+      ),
     )) as File[];
 
     return {

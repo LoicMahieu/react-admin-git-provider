@@ -1,5 +1,6 @@
 import { Pipelines } from "gitlab";
 import { createInstance as createCacheInstance } from "localforage";
+import pLimit from "p-limit";
 import {
   CreateParams,
   DeleteManyParams,
@@ -39,14 +40,15 @@ export class PipelineProvider implements IProvider {
     const pipelineList = (await this.pipelines.all(this.projectId, {
       ref: this.ref,
     })) as IPipeline[];
+    const limit = pLimit(5);
     const pipelines = (await Promise.all(
       pipelineList.map(pipeline =>
         cacheStoreGetOrSet(
           this.cacheStore,
           `${pipeline.id}`,
-          () => this.pipelines.show(this.projectId, pipeline.id),
-          (cached: { sha?: string }) => {
-            return cached.sha === pipeline.sha
+          () => limit(() => this.pipelines.show(this.projectId, pipeline.id)),
+          (cached: { sha?: string }) => {
+            return cached.sha === pipeline.sha;
           },
         ),
       ),
