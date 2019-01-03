@@ -20,7 +20,7 @@ interface IPipeline {
   sha: string;
 }
 
-export class PipelineProvider implements IProvider {
+export class ProviderPipeline implements IProvider {
   private readonly pipelines: Pipelines;
   private readonly projectId: string;
   private readonly ref: string;

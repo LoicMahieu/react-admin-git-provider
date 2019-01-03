@@ -1,8 +1,8 @@
 export { createAuthProvider, initialCheckForToken } from "./authProvider";
 import { createGitlabOptions, createRAProvider } from "./baseProvider";
-import { BranchProvider } from "./ProviderBranch";
+import { ProviderBranch } from "./ProviderBranch";
 import { ProviderEntity } from "./ProviderEntity";
-import { PipelineProvider } from "./ProviderPipeline";
+import { ProviderPipeline } from "./ProviderPipeline";
 
 export const createDataProviderEntity = ({
   projectId,
@@ -39,7 +39,7 @@ export const createDataProviderPipeline = ({
   gitlabOptions: { host: string };
 }) =>
   createRAProvider(
-    new PipelineProvider(createGitlabOptions(gitlabOptions), projectId, ref),
+    new ProviderPipeline(createGitlabOptions(gitlabOptions), projectId, ref),
   );
 
 export const createDataProviderBranch = ({
@@ -50,5 +50,5 @@ export const createDataProviderBranch = ({
   gitlabOptions: { host: string };
 }) =>
   createRAProvider(
-    new BranchProvider(createGitlabOptions(gitlabOptions), projectId),
+    new ProviderBranch(createGitlabOptions(gitlabOptions), projectId),
   );

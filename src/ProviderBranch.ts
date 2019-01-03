@@ -17,7 +17,7 @@ interface IBranch {
   commit: string;
 }
 
-export class BranchProvider implements IProvider {
+export class ProviderBranch implements IProvider {
   private readonly branches: Branches;
   private readonly projectId: string;
 
