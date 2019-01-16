@@ -13,11 +13,6 @@ import {
   UpdateParams,
 } from "./IProvider";
 
-export const createGitlabOptions = (gitlabOptions: object) => ({
-  ...gitlabOptions,
-  oauthToken: getToken(),
-});
-
 export const createReactAminProvider = (provider: IProvider) => async (
   type: string,
   resource: string,
