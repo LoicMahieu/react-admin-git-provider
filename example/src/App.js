@@ -74,7 +74,7 @@ const dataProvider = (type, resource, params) => {
 
 const UserFilter = props => (
   <Filter {...props}>
-    <TextInput label="Name (exact)" source="name" />
+    <TextInput label="Search" source="q" />
   </Filter>
 );
 

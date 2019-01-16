@@ -1,6 +1,6 @@
 import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import { createInstance as createCacheInstance } from "localforage";
-import { filter, orderBy } from "lodash";
+import { orderBy } from "lodash";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
@@ -19,6 +19,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
+import { filterItems } from "../../utils";
 
 interface TreeFile {
   id: string;
@@ -43,7 +44,7 @@ const sortEntities = (entities: Record[], params: ListParams): Record[] => {
   );
 };
 const filterEntities = (entities: Record[], params: ListParams): Record[] => {
-  return filter(entities, params.filter);
+  return filterItems(entities, params.filter);
 };
 const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
   const start = (params.pagination.page - 1) * params.pagination.perPage;
