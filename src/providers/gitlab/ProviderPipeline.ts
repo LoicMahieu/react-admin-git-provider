@@ -1,6 +1,7 @@
 import { Pipelines } from "gitlab";
 import { createInstance as createCacheInstance } from "localforage";
 import pLimit from "p-limit";
+import { cacheStoreGetOrSet } from "../../cache";
 import {
   CreateParams,
   DeleteManyParams,
@@ -15,7 +16,6 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
-import { cacheStoreGetOrSet } from "../../utils";
 
 interface IPipeline {
   id: number;

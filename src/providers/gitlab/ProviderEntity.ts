@@ -4,6 +4,7 @@ import { filter, orderBy } from "lodash";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
+import { cacheStoreGetOrSet } from "../../cache";
 import {
   CreateParams,
   DeleteManyParams,
@@ -18,7 +19,6 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
-import { cacheStoreGetOrSet } from "../../utils";
 
 interface TreeFile {
   id: string;
