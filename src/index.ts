@@ -1,6 +1,5 @@
-import { getToken } from "./authToken";
-export { createAuthProvider, initialCheckForToken } from "./authProvider";
 import { ProviderOptions } from "./IProvider";
+import * as gitlabAuth from "./providers/gitlab/authProvider";
 import { ProviderBranch as GitlabProviderBranch } from "./providers/gitlab/ProviderBranch";
 import { ProviderCommit as GitlabProviderCommit } from "./providers/gitlab/ProviderCommit";
 import { ProviderEntity as GitlabProviderEntity } from "./providers/gitlab/ProviderEntity";
@@ -8,6 +7,7 @@ import { ProviderPipeline as GitlabProviderPipeline } from "./providers/gitlab/P
 import { createReactAminProvider } from "./reactAdmin";
 
 export {
+  gitlabAuth,
   GitlabProviderBranch,
   GitlabProviderCommit,
   GitlabProviderEntity,
@@ -22,7 +22,7 @@ export const createDataProvider = (
     | typeof GitlabProviderPipeline,
   options: ProviderOptions,
 ) => {
-  const oauthToken = getToken() || undefined;
+  const oauthToken = gitlabAuth.getToken() || undefined;
   if (!oauthToken) {
     throw new Error("User is not logged.");
   }
@@ -30,7 +30,7 @@ export const createDataProvider = (
     basePath: "",
     ...options,
     gitlabOptions: {
-      oauthToken: getToken() || undefined,
+      oauthToken: oauthToken || undefined,
       ...options.gitlabOptions,
     },
   };

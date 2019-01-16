@@ -23,8 +23,7 @@ import {
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
 import {
-  createAuthProvider,
-  initialCheckForToken,
+  gitlabAuth,
   createDataProvider,
   GitlabProviderPipeline,
   GitlabProviderEntity,
@@ -33,9 +32,9 @@ import {
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
-initialCheckForToken();
+gitlabAuth.initialCheckForToken();
 
-const authProvider = createAuthProvider({
+const authProvider = gitlabAuth.createAuthProvider({
   baseUrl: process.env.GITLAB_OAUTH_BASE_URL,
   clientId: process.env.GITLAB_OAUTH_CLIENT_ID,
 });

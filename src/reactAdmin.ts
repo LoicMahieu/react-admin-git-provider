@@ -1,4 +1,3 @@
-import { getToken } from "./authToken";
 import {
   CreateParams,
   DeleteManyParams,
