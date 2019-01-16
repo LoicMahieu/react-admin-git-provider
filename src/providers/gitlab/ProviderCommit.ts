@@ -13,6 +13,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
+import { getToken } from "./authProvider";
 
 interface ICommit {
   id: string;
@@ -23,13 +24,12 @@ export class ProviderCommit implements IProvider {
   private readonly projectId: string;
   private readonly ref: string;
 
-  constructor({
-    gitlabOptions,
-    projectId,
-    ref,
-  }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
     this.projectId = projectId;
-    this.commits = new Commits(gitlabOptions || {});
+    this.commits = new Commits({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
     this.ref = ref;
   }
 

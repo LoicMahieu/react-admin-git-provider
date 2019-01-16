@@ -49,22 +49,22 @@ const baseProviderOptions = {
 
 const getProviderByResource = (resource) => {
   if (resource === "pipelines")
-    return createDataProvider(GitlabProviderPipeline, {
+    return createDataProvider(new GitlabProviderPipeline({
       ...baseProviderOptions,
-    });
+    }));
   if (resource === "branches")
-    return createDataProvider(GitlabProviderBranch, {
+    return createDataProvider(new GitlabProviderBranch({
       ...baseProviderOptions,
-    });
+    }));
   if (resource === "commits")
-    return createDataProvider(GitlabProviderCommit, {
+    return createDataProvider(new GitlabProviderCommit({
       ...baseProviderOptions,
-    });
+    }));
   else
-    return createDataProvider(GitlabProviderEntity, {
+    return createDataProvider(new GitlabProviderEntity({
       ...baseProviderOptions,
       basePath: `data/${resource}`,
-    });
+    }));
 };
 
 const dataProvider = (type, resource, params) => {

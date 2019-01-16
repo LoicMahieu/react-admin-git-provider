@@ -13,6 +13,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
+import { getToken } from "./authProvider";
 
 interface IBranch {
   name: string;
@@ -23,12 +24,12 @@ export class ProviderBranch implements IProvider {
   private readonly branches: Branches;
   private readonly projectId: string;
 
-  constructor({
-    gitlabOptions,
-    projectId,
-  }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId }: ProviderOptions) {
     this.projectId = projectId;
-    this.branches = new Branches(gitlabOptions || {});
+    this.branches = new Branches({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
   }
 
   public async getList(params: ListParams) {

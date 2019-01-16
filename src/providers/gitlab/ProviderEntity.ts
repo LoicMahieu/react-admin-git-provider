@@ -20,6 +20,7 @@ import {
   UpdateParams,
 } from "../../IProvider";
 import { filterItems } from "../../utils";
+import { getToken } from "./authProvider";
 
 interface TreeFile {
   id: string;
@@ -60,18 +61,22 @@ export class ProviderEntity implements IProvider {
   private readonly basePath: string;
   private readonly cacheStore: LocalForage;
 
-  constructor({
-    gitlabOptions,
-    projectId,
-    ref,
-    basePath,
-  }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId, ref, basePath }: ProviderOptions) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath || "/";
-    this.repositories = new Repositories(gitlabOptions || {});
-    this.repositoryFiles = new RepositoryFiles(gitlabOptions || {});
-    this.commits = new Commits(gitlabOptions || {});
+    this.repositories = new Repositories({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
+    this.repositoryFiles = new RepositoryFiles({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
+    this.commits = new Commits({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
     this.cacheStore = createCacheInstance({
       name: "react-admin-gitlab",
       storeName: "entities",

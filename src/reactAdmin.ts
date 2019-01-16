@@ -12,7 +12,7 @@ import {
   UpdateParams,
 } from "./IProvider";
 
-export const createReactAminProvider = (provider: IProvider) => async (
+export const createDataProvider = (provider: IProvider) => async (
   type: string,
   resource: string,
   params: Params,

@@ -4,7 +4,7 @@ import uuid from "uuid";
 const KEY = 'react-admin.gitlab-provider.token'
 
 export function getToken () {
-  return window.localStorage.getItem(KEY)
+  return window.localStorage.getItem(KEY) || undefined
 }
 export function setToken (value: string) {
   return window.localStorage.setItem(KEY, value)

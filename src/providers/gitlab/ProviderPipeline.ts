@@ -16,6 +16,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "../../IProvider";
+import { getToken } from "./authProvider";
 
 interface IPipeline {
   id: number;
@@ -28,14 +29,13 @@ export class ProviderPipeline implements IProvider {
   private readonly ref: string;
   private readonly cacheStore: LocalForage;
 
-  constructor({
-    gitlabOptions,
-    projectId,
-    ref,
-  }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
     this.projectId = projectId;
     this.ref = ref;
-    this.pipelines = new Pipelines(gitlabOptions || {});
+    this.pipelines = new Pipelines({
+      ...gitlabOptions,
+      oauthToken: getToken(),
+    });
     this.cacheStore = createCacheInstance({
       name: "react-admin-gitlab",
       storeName: "pipelines",
