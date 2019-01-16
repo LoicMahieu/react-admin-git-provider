@@ -1,68 +1,39 @@
+import { getToken } from "./authToken";
 export { createAuthProvider, initialCheckForToken } from "./authProvider";
-import { createGitlabOptions, createRAProvider } from "./baseProvider";
-import { ProviderBranch } from "./ProviderBranch";
-import { ProviderCommit } from "./ProviderCommit";
-import { ProviderEntity } from "./ProviderEntity";
-import { ProviderPipeline } from "./ProviderPipeline";
+import { ProviderOptions } from "./IProvider";
+import { ProviderBranch as GitlabProviderBranch } from "./providers/gitlab/ProviderBranch";
+import { ProviderCommit as GitlabProviderCommit } from "./providers/gitlab/ProviderCommit";
+import { ProviderEntity as GitlabProviderEntity } from "./providers/gitlab/ProviderEntity";
+import { ProviderPipeline as GitlabProviderPipeline } from "./providers/gitlab/ProviderPipeline";
+import { createReactAminProvider } from "./reactAdmin";
 
-export const createDataProviderEntity = ({
-  projectId,
-  ref,
-  basePath: getBasePath,
-  gitlabOptions,
-}: {
-  projectId: string;
-  ref: string;
-  basePath: string | ((resource: string) => string);
-  gitlabOptions: { host: string };
-}) => {
-  const create = (basePath: string) =>
-    new ProviderEntity(
-      createGitlabOptions(gitlabOptions),
-      projectId,
-      ref,
-      basePath,
-    );
-  return createRAProvider(
-    typeof getBasePath === "function"
-      ? resource => create(getBasePath(resource))
-      : create(getBasePath),
-  );
+export {
+  GitlabProviderBranch,
+  GitlabProviderCommit,
+  GitlabProviderEntity,
+  GitlabProviderPipeline,
 };
 
-export const createDataProviderPipeline = ({
-  projectId,
-  ref,
-  gitlabOptions,
-}: {
-  projectId: string;
-  ref: string;
-  gitlabOptions: { host: string };
-}) =>
-  createRAProvider(
-    new ProviderPipeline(createGitlabOptions(gitlabOptions), projectId, ref),
-  );
-
-export const createDataProviderBranch = ({
-  projectId,
-  gitlabOptions,
-}: {
-  projectId: string;
-  gitlabOptions: { host: string };
-}) =>
-  createRAProvider(
-    new ProviderBranch(createGitlabOptions(gitlabOptions), projectId),
-  );
-
-export const createDataProviderCommit = ({
-  projectId,
-  ref,
-  gitlabOptions,
-}: {
-  projectId: string;
-  ref: string;
-  gitlabOptions: { host: string };
-}) =>
-  createRAProvider(
-    new ProviderCommit(createGitlabOptions(gitlabOptions), projectId, ref),
-  );
+export const createDataProvider = (
+  ProviderClass:
+    | typeof GitlabProviderBranch
+    | typeof GitlabProviderCommit
+    | typeof GitlabProviderEntity
+    | typeof GitlabProviderPipeline,
+  options: ProviderOptions,
+) => {
+  const oauthToken = getToken() || undefined;
+  if (!oauthToken) {
+    throw new Error("User is not logged.");
+  }
+  options = {
+    basePath: "",
+    ...options,
+    gitlabOptions: {
+      oauthToken: getToken() || undefined,
+      ...options.gitlabOptions,
+    },
+  };
+  const provider = new ProviderClass(options);
+  return createReactAminProvider(provider);
+};

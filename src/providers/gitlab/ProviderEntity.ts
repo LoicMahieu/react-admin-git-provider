@@ -13,11 +13,12 @@ import {
   GetOneParams,
   IProvider,
   ListParams,
+  ProviderOptions,
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "./IProvider";
-import { cacheStoreGetOrSet } from "./utils";
+} from "../../IProvider";
+import { cacheStoreGetOrSet } from "../../utils";
 
 interface TreeFile {
   id: string;
@@ -58,18 +59,18 @@ export class ProviderEntity implements IProvider {
   private readonly basePath: string;
   private readonly cacheStore: LocalForage;
 
-  constructor(
-    gitlabOptions: object,
-    projectId: string,
-    ref: string,
-    basePath: string,
-  ) {
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+    basePath,
+  }: ProviderOptions) {
     this.projectId = projectId;
     this.ref = ref;
-    this.basePath = basePath;
-    this.repositories = new Repositories(gitlabOptions);
-    this.repositoryFiles = new RepositoryFiles(gitlabOptions);
-    this.commits = new Commits(gitlabOptions);
+    this.basePath = basePath || "/";
+    this.repositories = new Repositories(gitlabOptions || {});
+    this.repositoryFiles = new RepositoryFiles(gitlabOptions || {});
+    this.commits = new Commits(gitlabOptions || {});
     this.cacheStore = createCacheInstance({
       name: "react-admin-gitlab",
       storeName: "entities",
@@ -149,7 +150,7 @@ export class ProviderEntity implements IProvider {
 
   public async create(params: CreateParams) {
     const data = this.createEntity(params.data);
-    const filePath = this.getFilePath(data.id)
+    const filePath = this.getFilePath(data.id);
 
     await this.commits.create(
       this.projectId,
@@ -169,7 +170,7 @@ export class ProviderEntity implements IProvider {
 
   // TODO: check if data are equals, so skip commit
   public async update(params: UpdateParams) {
-    const filePath = this.getFilePath(params.id)
+    const filePath = this.getFilePath(params.id);
     await this.commits.create(
       this.projectId,
       this.ref,
@@ -224,7 +225,7 @@ export class ProviderEntity implements IProvider {
   }
 
   public async delete(params: DeleteParams) {
-    const filePath = this.getFilePath(params.id)
+    const filePath = this.getFilePath(params.id);
     await this.commits.create(
       this.projectId,
       this.ref,

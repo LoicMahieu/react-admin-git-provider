@@ -25,10 +25,11 @@ import { Button } from "@material-ui/core";
 import {
   createAuthProvider,
   initialCheckForToken,
-  createDataProviderPipeline,
-  createDataProviderEntity,
-  createDataProviderBranch,
-  createDataProviderCommit,
+  createDataProvider,
+  GitlabProviderPipeline,
+  GitlabProviderEntity,
+  GitlabProviderBranch,
+  GitlabProviderCommit,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
@@ -47,27 +48,28 @@ const baseProviderOptions = {
   },
 };
 
-const dataProviderEntity = createDataProviderEntity({
-  ...baseProviderOptions,
-  basePath: resource => `data/${resource}`,
-});
-const dataProviderPipeline = createDataProviderPipeline({
-  ...baseProviderOptions,
-});
-const dataProviderBranch = createDataProviderBranch({
-  ...baseProviderOptions,
-});
-const dataProviderCommit = createDataProviderCommit({
-  ...baseProviderOptions,
-});
-const dataProvider = (action, resource, params) => {
+const getProviderByResource = (resource) => {
   if (resource === "pipelines")
-    return dataProviderPipeline(action, resource, params);
+    return createDataProvider(GitlabProviderPipeline, {
+      ...baseProviderOptions,
+    });
   if (resource === "branches")
-    return dataProviderBranch(action, resource, params);
+    return createDataProvider(GitlabProviderBranch, {
+      ...baseProviderOptions,
+    });
   if (resource === "commits")
-    return dataProviderCommit(action, resource, params);
-  else return dataProviderEntity(action, resource, params);
+    return createDataProvider(GitlabProviderCommit, {
+      ...baseProviderOptions,
+    });
+  else
+    return createDataProvider(GitlabProviderEntity, {
+      ...baseProviderOptions,
+      basePath: `data/${resource}`,
+    });
+};
+
+const dataProvider = (type, resource, params) => {
+  return getProviderByResource(resource)(type, resource, params);
 };
 
 const UserFilter = props => (

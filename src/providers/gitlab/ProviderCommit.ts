@@ -1,4 +1,4 @@
-import { Branches } from "gitlab";
+import { Commits } from "gitlab";
 import {
   CreateParams,
   DeleteManyParams,
@@ -6,53 +6,51 @@ import {
   GetManyParams,
   GetManyReferenceParams,
   GetOneParams,
+  IProvider,
   ListParams,
+  ProviderOptions,
+  Record,
   UpdateManyParams,
   UpdateParams,
-} from "./baseProvider";
-import { IProvider, Record } from "./IProvider";
+} from "../../IProvider";
 
-interface IBranch {
-  name: string;
-  commit: string;
+interface ICommit {
+  id: string;
 }
 
-export class ProviderBranch implements IProvider {
-  private readonly branches: Branches;
+export class ProviderCommit implements IProvider {
+  private readonly commits: Commits;
   private readonly projectId: string;
+  private readonly ref: string;
 
-  constructor(gitlabOptions: object, projectId: string) {
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+  }: ProviderOptions) {
     this.projectId = projectId;
-    this.branches = new Branches(gitlabOptions);
+    this.commits = new Commits(gitlabOptions || {});
+    this.ref = ref;
   }
 
   public async getList(params: ListParams) {
-    const branchList = (await this.branches.all(this.projectId, {
-      search: "",
-    })) as IBranch[];
-    const branches: Record[] = branchList.map(branch => ({
-      ...branch,
-      id: branch.name,
-    }));
+    const commits = (await this.commits.all(this.projectId, {
+      ref: this.ref,
+    })) as ICommit[];
 
     return {
-      data: branches,
-      total: branches.length,
+      data: commits,
+      total: commits.length,
     };
   }
 
   public async getOne(params: GetOneParams) {
-    const rawBranch = (await this.branches.show(
+    const commit = (await this.commits.show(
       this.projectId,
       params.id,
-    )) as IBranch;
-    const branch: Record = {
-      ...rawBranch,
-      id: rawBranch.name,
-    };
-
+    )) as ICommit;
     return {
-      data: branch,
+      data: commit,
     };
   }
 

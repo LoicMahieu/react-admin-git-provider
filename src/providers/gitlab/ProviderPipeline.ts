@@ -8,12 +8,14 @@ import {
   GetManyParams,
   GetManyReferenceParams,
   GetOneParams,
+  IProvider,
   ListParams,
+  ProviderOptions,
+  Record,
   UpdateManyParams,
   UpdateParams,
-} from "./baseProvider";
-import { IProvider, Record } from "./IProvider";
-import { cacheStoreGetOrSet } from "./utils";
+} from "../../IProvider";
+import { cacheStoreGetOrSet } from "../../utils";
 
 interface IPipeline {
   id: number;
@@ -26,10 +28,14 @@ export class ProviderPipeline implements IProvider {
   private readonly ref: string;
   private readonly cacheStore: LocalForage;
 
-  constructor(gitlabOptions: object, projectId: string, ref: string) {
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+  }: ProviderOptions) {
     this.projectId = projectId;
     this.ref = ref;
-    this.pipelines = new Pipelines(gitlabOptions);
+    this.pipelines = new Pipelines(gitlabOptions || {});
     this.cacheStore = createCacheInstance({
       name: "react-admin-gitlab",
       storeName: "pipelines",

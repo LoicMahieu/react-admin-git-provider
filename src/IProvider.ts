@@ -69,24 +69,34 @@ export interface Record {
   id: string | number;
 }
 
-export interface IProvider {
-  getList(params: ListParams): Promise<GetListOutput>;
+export interface ProviderOptions {
+  projectId: string;
+  ref: string;
+  basePath?: string;
+  gitlabOptions?: {
+    oauthToken?: string;
+    host?: string
+  };
+}
 
-  getOne(params: GetOneParams): Promise<GetOneOutput>;
+export declare class IProvider {
+  public getList(params: ListParams): Promise<GetListOutput>;
 
-  getMany(params: GetManyParams): Promise<GetManyOutput>;
+  public getOne(params: GetOneParams): Promise<GetOneOutput>;
 
-  getManyReference(
+  public getMany(params: GetManyParams): Promise<GetManyOutput>;
+
+  public getManyReference(
     params: GetManyReferenceParams,
   ): Promise<GetManyReferenceOutput>;
 
-  create(params: CreateParams): Promise<CreateOutput>;
+  public create(params: CreateParams): Promise<CreateOutput>;
 
-  update(params: UpdateParams): Promise<UpdateOutput>;
+  public update(params: UpdateParams): Promise<UpdateOutput>;
 
-  updateMany(params: UpdateManyParams): Promise<UpdateManyOutput>;
+  public updateMany(params: UpdateManyParams): Promise<UpdateManyOutput>;
 
-  delete(params: DeleteParams): Promise<DeleteOutput>;
+  public delete(params: DeleteParams): Promise<DeleteOutput>;
 
-  deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput>;
+  public deleteMany(params: DeleteManyParams): Promise<DeleteManyOutput>;
 }
