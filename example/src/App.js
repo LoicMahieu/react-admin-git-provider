@@ -18,7 +18,6 @@ import {
   crudUpdateMany,
   ListGuesser,
   DateField,
-  ReferenceArrayField,
 } from "react-admin";
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
@@ -29,18 +28,28 @@ import {
   GitlabProviderEntity,
   GitlabProviderBranch,
   GitlabProviderCommit,
+
+  githubAuth,
+  GithubProviderEntity,
 } from "../../lib";
 import { LoginPage } from "./LoginPage";
 
 gitlabAuth.initialCheckForToken();
 
-const authProvider = gitlabAuth.createAuthProvider({
+const isGitlab = false
+
+const authProvider = isGitlab ? gitlabAuth.createAuthProvider({
   baseUrl: process.env.GITLAB_OAUTH_BASE_URL,
   clientId: process.env.GITLAB_OAUTH_CLIENT_ID,
+}) : githubAuth.createAuthProvider({
+  // baseUrl: process.env.GITHUB_OAUTH_BASE_URL,
+  clientId: "1c0c4d1188b0b28eb9cb", // process.env.GITHUB_OAUTH_CLIENT_ID
 });
 
+console.log(authProvider)
+
 const baseProviderOptions = {
-  projectId: process.env.GITLAB_PROJECT_ID,
+  projectId: "LoicMahieu/test-react-admin-content", // process.env.GITLAB_PROJECT_ID,
   ref: process.env.GITLAB_REF,
   gitlabOptions: {
     host: process.env.GITLAB_API,
@@ -60,11 +69,19 @@ const getProviderByResource = (resource) => {
     return createDataProvider(new GitlabProviderCommit({
       ...baseProviderOptions,
     }));
-  else
-    return createDataProvider(new GitlabProviderEntity({
-      ...baseProviderOptions,
-      basePath: `data/${resource}`,
-    }));
+  else {
+    if (isGitlab) {
+      return createDataProvider(new GitlabProviderEntity({
+        ...baseProviderOptions,
+        basePath: `data/${resource}`,
+      }));
+    } else {
+      return createDataProvider(new GithubProviderEntity({
+        ...baseProviderOptions,
+        basePath: `data/${resource}`,
+      }));
+    }
+  }
 };
 
 const dataProvider = (type, resource, params) => {

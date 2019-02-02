@@ -17,6 +17,8 @@ module.exports = {
         'GITLAB_OAUTH_BASE_URL': JSON.stringify(process.env.GITLAB_OAUTH_BASE_URL),
         'GITLAB_PROJECT_ID': JSON.stringify(process.env.GITLAB_PROJECT_ID),
         'GITLAB_REF': JSON.stringify(process.env.GITLAB_REF),
+
+        'GITHUB_OAUTH_CLIENT_ID': JSON.stringify(process.env.GITHUB_OAUTH_CLIENT_ID),
       },
     }),
   ],
