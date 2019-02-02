@@ -10,7 +10,7 @@ import {
   Params,
   UpdateManyParams,
   UpdateParams,
-} from "./IProvider";
+} from "./types";
 
 export const createDataProvider = (provider: IProvider) => async (
   type: string,

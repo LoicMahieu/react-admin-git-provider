@@ -18,7 +18,7 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../IProvider";
+} from "../../types";
 import { filterItems } from "../../utils";
 import { getToken } from "./authProvider";
 
