@@ -6,6 +6,7 @@ import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
 import { cacheStoreGetOrSet } from "../../cache";
+import { AnyEntitySerializer, ISerializers, serializers } from "../../entitySerializers";
 import {
   CreateParams,
   DeleteManyParams,
@@ -19,7 +20,7 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../IProvider";
+} from "../../types";
 import { filterItems } from "../../utils";
 import { getToken } from "./authProvider";
 
@@ -53,6 +54,10 @@ const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
   return entities.slice(start, start + params.pagination.perPage);
 };
 
+export interface ProviderEntityOptions extends ProviderOptions {
+  serializer: keyof ISerializers;
+}
+
 export class ProviderEntity implements IProvider {
   private readonly repositoryFiles: RepositoryFiles;
   private readonly commits: Commits;
@@ -61,10 +66,11 @@ export class ProviderEntity implements IProvider {
   private readonly ref: string;
   private readonly basePath: string;
   private readonly cacheStore: LocalForage;
+  private readonly serializer: AnyEntitySerializer;
 
   private readonly baseParams: { ref: string; repo: string; owner: string };
 
-  constructor({ gitlabOptions, projectId, ref, basePath }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId, ref, basePath, serializer }: ProviderEntityOptions) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath || "/";
@@ -89,6 +95,7 @@ export class ProviderEntity implements IProvider {
       ref: this.ref,
       repo: this.projectId.split("/")[1],
     };
+    this.serializer = new serializers[serializer || "json"]();
   }
 
   public async getList(params: ListParams) {
