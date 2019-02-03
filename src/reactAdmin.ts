@@ -12,11 +12,14 @@ import {
   UpdateParams,
 } from "./types";
 
-export const createDataProvider = (provider: IProvider) => async (
+export const createDataProvider = (provider: IProvider | (({ resource }: { resource: string }) => IProvider)) => async (
   type: string,
   resource: string,
   params: Params,
 ) => {
+  if (typeof provider === 'function') {
+    provider = provider({ resource })
+  }
   switch (type) {
     case "GET_LIST":
       return provider.getList(params as ListParams);
