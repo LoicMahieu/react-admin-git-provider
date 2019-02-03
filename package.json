@@ -18,6 +18,7 @@
     "react": "^16.7.0"
   },
   "dependencies": {
+    "@octokit/rest": "^16.9.0",
     "gitlab": "^5.0.0-rc.7",
     "localforage": "^1.7.3",
     "lodash": "^4.17.11",

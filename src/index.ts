@@ -1,3 +1,5 @@
+import * as githubAuth from "./providers/github/authProvider";
+import { ProviderEntity as GithubProviderEntity } from "./providers/github/ProviderEntity";
 import * as gitlabAuth from "./providers/gitlab/authProvider";
 import { ProviderBranch as GitlabProviderBranch } from "./providers/gitlab/ProviderBranch";
 import { ProviderCommit as GitlabProviderCommit } from "./providers/gitlab/ProviderCommit";
@@ -12,4 +14,7 @@ export {
   GitlabProviderCommit,
   GitlabProviderEntity,
   GitlabProviderPipeline,
+
+  githubAuth,
+  GithubProviderEntity,
 };
