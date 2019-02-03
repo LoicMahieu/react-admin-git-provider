@@ -6,6 +6,11 @@ import { basename, extname } from "path";
 import uuid from "uuid";
 import { cacheStoreGetOrSet } from "../../cache";
 import {
+  AnyEntitySerializer,
+  ISerializers,
+  serializers,
+} from "../../entitySerializers";
+import {
   CreateParams,
   DeleteManyParams,
   DeleteParams,
@@ -18,7 +23,7 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../IProvider";
+} from "../../types";
 import { filterItems } from "../../utils";
 import { getToken } from "./authProvider";
 
@@ -52,6 +57,10 @@ const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
   return entities.slice(start, start + params.pagination.perPage);
 };
 
+export interface ProviderEntityOptions extends ProviderOptions {
+  serializer: keyof ISerializers;
+}
+
 export class ProviderEntity implements IProvider {
   private readonly repositories: Repositories;
   private readonly repositoryFiles: RepositoryFiles;
@@ -60,8 +69,15 @@ export class ProviderEntity implements IProvider {
   private readonly ref: string;
   private readonly basePath: string;
   private readonly cacheStore: LocalForage;
+  private readonly serializer: AnyEntitySerializer;
 
-  constructor({ gitlabOptions, projectId, ref, basePath }: ProviderOptions) {
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+    basePath,
+    serializer,
+  }: ProviderEntityOptions) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath || "/";
@@ -81,6 +97,7 @@ export class ProviderEntity implements IProvider {
       name: "react-admin-gitlab",
       storeName: "entities",
     });
+    this.serializer = new serializers[serializer || "json"]();
   }
 
   public async getList(params: ListParams) {
@@ -273,7 +290,7 @@ export class ProviderEntity implements IProvider {
   });
 
   private parseEntity = (file: File): Record => {
-    const content = JSON.parse(
+    const content = this.serializer.parse(
       Buffer.from(file.content, file.encoding).toString("utf8"),
     );
     return {

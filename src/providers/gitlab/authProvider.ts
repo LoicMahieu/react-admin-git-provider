@@ -57,5 +57,5 @@ function getOAuthRedirect(options: AuthOptions) {
     scope: "api",
     state: uuid(),
   });
-  return `${options.baseUrl}/oauth/authorize?${data}`;
+  return `${options.baseUrl || "https://gitlab.com"}/oauth/authorize?${data}`;
 }

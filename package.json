@@ -1,5 +1,5 @@
 {
-  "name": "react-admin-gitlab-provider",
+  "name": "react-admin-git-provider",
   "version": "0.0.17",
   "files": [
     "lib/*"

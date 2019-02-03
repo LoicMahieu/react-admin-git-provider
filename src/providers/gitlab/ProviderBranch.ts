@@ -12,7 +12,7 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../IProvider";
+} from "../../types";
 import { getToken } from "./authProvider";
 
 interface IBranch {
