@@ -1277,15 +1277,14 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-gitlab@^5.0.0-rc.7:
-  version "5.0.0-rc.7"
-  resolved "https://registry.yarnpkg.com/gitlab/-/gitlab-5.0.0-rc.7.tgz#d35f594eccd2c454b6a9d86fd2e1ecb1fb386035"
-  integrity sha512-MXzLMJdLM1P6Wn5PaYZaf9d5voAzUSyPa4wIDm5Q+cjLdnXJM1nONWo/LD5khl2OGiZ3GsTS1/m2KZkStZ7W1g==
+gitlab@LoicMahieu/node-gitlab#feature/request-ky-build:
+  version "5.0.0-rc.8"
+  resolved "https://codeload.github.com/LoicMahieu/node-gitlab/tar.gz/02d30cf319d376c4422767a4a9d0343a38dc9a8f"
   dependencies:
     form-data "^2.3.3"
     got "^9.5.0"
     humps "^2.0.1"
-    ky "^0.5.1"
+    ky "^0.7.1"
     query-string "^6.2.0"
     randomstring "^1.1.5"
 
@@ -2320,10 +2319,10 @@ kleur@^3.0.0:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.1.tgz#4f5b313f5fa315432a400f19a24db78d451ede62"
   integrity sha512-P3kRv+B+Ra070ng2VKQqW4qW7gd/v3iD8sy/zOdcYRsfiD+QBokQNOps/AfP6Hr48cBhIIBFWckB9aO+IZhrWg==
 
-ky@^0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/ky/-/ky-0.5.1.tgz#83947ea74955654100565ad19b525fcb129b472b"
-  integrity sha512-1ZGATX+y8kQIMg8jzTQFboqN6XUSdYTtJbVK8h8mXy1HTp04iq78plsDoKkHPnAb1lnaN5P7TDZ95aMB+Mr1zA==
+ky@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/ky/-/ky-0.7.1.tgz#625caee8ed2392eda0d96b84cac55e543a9186c3"
+  integrity sha512-TzbFiF49OXKHBuNaeft6KIZhKa4WNslqjmDs56y6qWQJp+cUOH5EipnJRKl2XpGsBJqpoETFJ2MA/ZYfKA1Qew==
 
 latest-version@^3.0.0:
   version "3.1.0"
