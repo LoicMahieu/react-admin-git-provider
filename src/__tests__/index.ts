@@ -3,9 +3,12 @@ import * as mod from "..";
 describe("react-admin-gitlab", () => {
   test("export", () => {
     expect(Object.keys(mod)).toEqual([
-      "authProvider",
-      "initialCheckForToken",
-      "dataProvider",
+      "gitlabAuth",
+      "GitlabProviderBranch",
+      "GitlabProviderCommit",
+      "GitlabProviderEntity",
+      "GitlabProviderPipeline",
+      "createDataProvider",
     ]);
   });
 });
