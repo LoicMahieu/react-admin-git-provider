@@ -12,14 +12,11 @@ import {
   UpdateParams,
 } from "./types";
 
-export const createDataProvider = (provider: IProvider | (({ resource }: { resource: string }) => IProvider)) => async (
+const createReactAdminProvider = (provider: IProvider) => async (
   type: string,
   resource: string,
   params: Params,
 ) => {
-  if (typeof provider === 'function') {
-    provider = provider({ resource })
-  }
   switch (type) {
     case "GET_LIST":
       return provider.getList(params as ListParams);
@@ -41,5 +38,19 @@ export const createDataProvider = (provider: IProvider | (({ resource }: { resou
       return provider.deleteMany(params as DeleteManyParams);
     default:
       throw new Error(`Unsupported Data Provider request type ${type}`);
+  }
+};
+
+export const createDataProvider = (
+  getProvider: IProvider | (({ resource }: { resource: string }) => IProvider),
+) => {
+  if (typeof getProvider === "function") {
+    return async (type: string, resource: string, params: Params) => {
+      const provider = getProvider({ resource });
+      const providerFn = createReactAdminProvider(provider);
+      return providerFn(type, resource, params);
+    };
+  } else {
+    return createReactAdminProvider(getProvider);
   }
 };
