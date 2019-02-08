@@ -43,6 +43,9 @@ interface File {
 }
 
 const sortEntities = (entities: Record[], params: ListParams): Record[] => {
+  if (!params.sort.field || !params.sort.order) {
+    return entities;
+  }
   return orderBy(
     entities,
     [params.sort.field],
@@ -53,8 +56,8 @@ const filterEntities = (entities: Record[], params: ListParams): Record[] => {
   return filterItems(entities, params.filter);
 };
 const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
-  const start = (params.pagination.page - 1) * params.pagination.perPage;
-  return entities.slice(start, start + params.pagination.perPage);
+  const start = (params.pagination.page - 1) * (params.pagination.perPage || 10);
+  return entities.slice(start, start + (params.pagination.perPage || 10));
 };
 
 export interface ProviderEntityOptions extends ProviderOptions {

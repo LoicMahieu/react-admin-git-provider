@@ -4,8 +4,8 @@ export interface ListParams {
     perPage: number;
   };
   sort: {
-    field: string;
-    order: "ASC" | "DESC";
+    field: string | null;
+    order: "ASC" | "DESC" | null;
   };
   filter: object;
 }
