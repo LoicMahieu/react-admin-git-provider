@@ -1,6 +1,6 @@
 {
-  "name": "sample",
-  "version": "0.1.0",
+  "name": "@react-admin-git-provider/example",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
