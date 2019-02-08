@@ -13,6 +13,9 @@
     "watch": "yarn build && tsc -w",
     "prepare": "yarn build"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
