@@ -26,7 +26,7 @@ import {
   gitlabAuth,
   createDataProvider,
   GitlabProviderPipeline,
-  GitlabProviderEntity,
+  GitlabProviderFileList,
   GitlabProviderBranch,
   GitlabProviderCommit,
 } from "../../lib";
@@ -61,7 +61,7 @@ const getProviderByResource = (resource) => {
       ...baseProviderOptions,
     }));
   else
-    return createDataProvider(new GitlabProviderEntity({
+    return createDataProvider(new GitlabProviderFileList({
       ...baseProviderOptions,
       basePath: `data/${resource}`,
     }));

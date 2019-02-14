@@ -60,11 +60,11 @@ const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
   return entities.slice(start, start + (params.pagination.perPage || 10));
 };
 
-export interface ProviderEntityOptions extends ProviderOptions {
+export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
 }
 
-export class ProviderEntity implements IProvider {
+export class ProviderFileList implements IProvider {
   private readonly repositories: Repositories;
   private readonly repositoryFiles: RepositoryFiles;
   private readonly commits: Commits;
@@ -80,7 +80,7 @@ export class ProviderEntity implements IProvider {
     ref,
     basePath,
     serializer,
-  }: ProviderEntityOptions) {
+  }: ProviderFileListOptions) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath || "/";

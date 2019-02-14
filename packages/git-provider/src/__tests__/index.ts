@@ -6,7 +6,7 @@ describe("react-admin-gitlab", () => {
       "gitlabAuth",
       "GitlabProviderBranch",
       "GitlabProviderCommit",
-      "GitlabProviderEntity",
+      "GitlabProviderFileList",
       "GitlabProviderPipeline",
       "createDataProvider",
     ]);
