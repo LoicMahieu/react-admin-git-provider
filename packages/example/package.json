@@ -6,6 +6,7 @@
     "start": "webpack-dev-server"
   },
   "dependencies": {
+    "react-admin-git-provider": "0.0.22",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
     "@babel/preset-react": "^7.0.0",

@@ -29,7 +29,7 @@ import {
   GitlabProviderFileList,
   GitlabProviderBranch,
   GitlabProviderCommit,
-} from "../../lib";
+} from "react-admin-git-provider";
 import { LoginPage } from "./LoginPage";
 
 gitlabAuth.initialCheckForToken();
