@@ -1,12 +1,11 @@
 {
   "name": "@react-admin-git-provider/example",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
   },
   "dependencies": {
-    "react-admin-git-provider": "0.0.22",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-react": "^7.0.0",
@@ -17,6 +16,7 @@
     "html-webpack-plugin": "^3.2.0",
     "react": "^16.8.1",
     "react-admin": "^2.7.1",
+    "react-admin-git-provider": "^0.0.23",
     "react-dom": "^16.8.1",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.2.3",
