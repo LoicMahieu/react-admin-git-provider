@@ -1,13 +1,13 @@
 export interface ListParams {
-  pagination: {
-    page: number;
-    perPage: number;
+  pagination?: {
+    page?: number;
+    perPage?: number;
   };
-  sort: {
-    field: string | null;
-    order: "ASC" | "DESC" | null;
+  sort?: {
+    field?: string | null;
+    order?: "ASC" | "DESC" | null;
   };
-  filter: object;
+  filter?: object;
 }
 export interface GetOneParams {
   id: string;

@@ -43,7 +43,7 @@ interface File {
 }
 
 const sortEntities = (entities: Record[], params: ListParams): Record[] => {
-  if (!params.sort.field || !params.sort.order) {
+  if (!params.sort || !params.sort.field || !params.sort.order) {
     return entities;
   }
   return orderBy(
@@ -53,9 +53,12 @@ const sortEntities = (entities: Record[], params: ListParams): Record[] => {
   );
 };
 const filterEntities = (entities: Record[], params: ListParams): Record[] => {
-  return filterItems(entities, params.filter);
+  return filterItems(entities, params.filter || {});
 };
 const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
+  if (!params.pagination || !params.pagination.page || !params.pagination.perPage) {
+    return entities;
+  }
   const start = (params.pagination.page - 1) * (params.pagination.perPage || 10);
   return entities.slice(start, start + (params.pagination.perPage || 10));
 };
@@ -103,7 +106,7 @@ export class ProviderFileList implements IProvider {
     this.serializer = new serializers[serializer || "json"]();
   }
 
-  public async getList(params: ListParams) {
+  public async getList(params: ListParams = {}) {
     const tree = (await this.repositories.tree(this.projectId, {
       path: this.basePath,
       ref: this.ref,
