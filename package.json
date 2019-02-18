@@ -5,7 +5,8 @@
   "author": "Loïc Mahieu <mahieuloic@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "tslint -p ."
+    "lint": "tslint -p .",
+    "start": "lerna run --stream --no-sort start"
   },
   "workspaces": [
     "packages/*"

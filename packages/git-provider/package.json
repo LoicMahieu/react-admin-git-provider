@@ -10,7 +10,7 @@
   "scripts": {
     "test": "npm run build && jest",
     "build": "rm -rf lib/* && tsc",
-    "watch": "yarn build && tsc -w",
+    "start": "yarn build && tsc -w",
     "prepare": "yarn build"
   },
   "publishConfig": {
