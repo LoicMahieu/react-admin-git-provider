@@ -1,6 +1,6 @@
 {
   "name": "@react-admin-git-provider/example",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
@@ -16,7 +16,7 @@
     "html-webpack-plugin": "^3.2.0",
     "react": "^16.8.2",
     "react-admin": "^2.7.1",
-    "react-admin-git-provider": "^0.0.24",
+    "react-admin-git-provider": "^0.0.25",
     "react-dom": "^16.8.2",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
