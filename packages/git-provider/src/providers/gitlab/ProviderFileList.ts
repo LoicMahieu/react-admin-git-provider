@@ -42,7 +42,7 @@ interface File {
   filePath: string;
 }
 
-const sortEntities = (entities: Record[], params: ListParams): Record[] => {
+const sortRecords = (entities: Record[], params: ListParams): Record[] => {
   if (!params.sort || !params.sort.field || !params.sort.order) {
     return entities;
   }
@@ -52,10 +52,10 @@ const sortEntities = (entities: Record[], params: ListParams): Record[] => {
     [params.sort.order.toLowerCase() as "asc" | "desc"],
   );
 };
-const filterEntities = (entities: Record[], params: ListParams): Record[] => {
+const filterRecords = (entities: Record[], params: ListParams): Record[] => {
   return filterItems(entities, params.filter || {});
 };
-const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
+const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
   if (
     !params.pagination ||
     !params.pagination.page ||
@@ -134,9 +134,9 @@ export class ProviderFileList implements IProvider {
     )) as File[];
 
     return {
-      data: paginateEntities(
-        filterEntities(
-          sortEntities(files.map(this.parseEntity), params),
+      data: paginateRecords(
+        filterRecords(
+          sortRecords(files.map(this.parseEntity), params),
           params,
         ),
         params,
