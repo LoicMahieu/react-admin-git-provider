@@ -56,10 +56,15 @@ const filterEntities = (entities: Record[], params: ListParams): Record[] => {
   return filterItems(entities, params.filter || {});
 };
 const paginateEntities = (entities: Record[], params: ListParams): Record[] => {
-  if (!params.pagination || !params.pagination.page || !params.pagination.perPage) {
+  if (
+    !params.pagination ||
+    !params.pagination.page ||
+    !params.pagination.perPage
+  ) {
     return entities;
   }
-  const start = (params.pagination.page - 1) * (params.pagination.perPage || 10);
+  const start =
+    (params.pagination.page - 1) * (params.pagination.perPage || 10);
   return entities.slice(start, start + (params.pagination.perPage || 10));
 };
 
@@ -107,10 +112,8 @@ export class ProviderFileList implements IProvider {
   }
 
   public async getList(params: ListParams = {}) {
-    const tree = (await this.repositories.tree(this.projectId, {
-      path: this.basePath,
-      ref: this.ref,
-    })) as TreeFile[];
+    const tree = await this.fetchTreeRecursive();
+
     const limit = pLimit(5);
     const files = (await Promise.all(
       tree.map(async treeFile =>
@@ -313,4 +316,33 @@ export class ProviderFileList implements IProvider {
   private getFilePath = (entityId: string | number) => {
     return this.basePath + "/" + entityId + ".json";
   };
+
+  private async fetchTreeRecursive() {
+    let nextPage = 1;
+    let result: TreeFile[] = [];
+
+    while (nextPage) {
+      const data = (await this.repositories.tree(this.projectId, {
+        page: nextPage,
+        path: this.basePath,
+        ref: this.ref,
+        showPagination: true,
+      })) as {
+        data: TreeFile[];
+        pagination: {
+          total: number;
+          next: number | null;
+          current: number | null;
+          previous: number | null;
+          perPage: number;
+          totalPages: number;
+        };
+      };
+
+      result = [...result, ...data.data];
+      nextPage = data.pagination.next || 0
+    }
+
+    return result;
+  }
 }
