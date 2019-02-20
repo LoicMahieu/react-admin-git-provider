@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { userLogin } from "react-admin";
-import { LockOutline } from "@material-ui/icons";
+import { LockOutlined } from "@material-ui/icons";
 import { Avatar, Button, CssBaseline, Paper } from "@material-ui/core";
 import withStyles from "@material-ui/core/styles/withStyles";
 
@@ -52,7 +52,7 @@ function SignIn(props) {
       <CssBaseline />
       <Paper className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <LockOutline />
+          <LockOutlined />
         </Avatar>
         <form className={classes.form} onSubmit={onSubmit}>
           <Button
