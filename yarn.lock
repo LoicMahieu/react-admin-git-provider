@@ -4409,7 +4409,7 @@ gitconfiglocal@^1.0.0:
 
 gitlab@LoicMahieu/node-gitlab#feature/request-ky-build:
   version "5.0.0-rc.8"
-  resolved "https://codeload.github.com/LoicMahieu/node-gitlab/tar.gz/59b13e4879f5fd23671d12eac9829bc48ce18b28"
+  resolved "https://codeload.github.com/LoicMahieu/node-gitlab/tar.gz/cbe069766f33b75ff5716c7a850da48342064b8f"
   dependencies:
     form-data "^2.3.3"
     got "^9.5.0"
