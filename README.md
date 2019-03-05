@@ -4,7 +4,7 @@ Gitlab data provider for [React Admin](https://marmelab.com/react-admin/).
 
 ## Features
 
-* List/edit/remove JSON files (`entity`)
+* List/edit/remove JSON files
 * List pipelines
 * List branches
 * List commits
@@ -18,13 +18,13 @@ npm install react-admin-git-provider
 yarn add react-admin-git-provider
 ```
 
-## Example: `entity`
+## Example: `GitlabProviderFileList`
 
 ```js
 import {
   createDataProvider,
   gitlabAuth,
-  GitlabProviderEntity,
+  GitlabProviderFileList,
 } from "react-admin-git-provider";
 
 const authProvider = gitlabAuth.createAuthProvider({
@@ -33,7 +33,7 @@ const authProvider = gitlabAuth.createAuthProvider({
 });
 
 const dataProvider = createDataProvider(({ resource }) =>
-  new GitlabProviderEntity({
+  new GitlabProviderFileList({
     ...baseProviderOptions,
     basePath: `data/${resource}`,
   })
