@@ -1,36 +1,30 @@
 {
-  "name": "react-admin-git-provider",
-  "version": "0.0.28",
+  "name": "@react-admin-git-provider/gitlab",
+  "version": "0.0.1",
   "files": [
     "lib/*"
   ],
   "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
   "author": "Loïc Mahieu <mahieuloic@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "npm run build && jest",
+    "test": "npm run build",
     "build": "rm -rf lib/* && tsc",
-    "start": "yarn build && tsc -w",
+    "watch": "yarn build && tsc -w",
     "prepare": "yarn build"
   },
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {
-    "react": "^16.7.0"
-  },
   "dependencies": {
+    "@react-admin-git-provider/common": "^0.0.1",
     "gitlab": "LoicMahieu/node-gitlab#feature/request-ky-build",
-    "localforage": "^1.7.3",
-    "lodash": "^4.17.11",
-    "p-limit": "^2.1.0",
-    "uuid": "^3.3.2"
+    "p-limit": "^2.2.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.6",
-    "@types/lodash": "^4.14.121",
     "@types/p-limit": "^2.0.0",
-    "@types/uuid": "^3.4.4",
     "jest": "^24.1.0",
     "ts-jest": "^23.10.5",
     "typescript": "^3.3.3"

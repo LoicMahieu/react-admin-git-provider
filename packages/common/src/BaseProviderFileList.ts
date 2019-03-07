@@ -1,13 +1,9 @@
-import { createInstance as createCacheInstance } from "localforage";
 import { orderBy } from "lodash";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
-import {
-  BaseProviderAPI,
-  BaseProviderAPIFile,
-} from "./BaseProviderAPI";
-import { cacheStoreGetOrSet } from "./cache";
+import { BaseProviderAPI, BaseProviderAPIFile } from "./BaseProviderAPI";
+import { cacheStoreGetOrSet, createCacheInstance } from "./cache";
 import {
   AnyEntitySerializer,
   ISerializers,

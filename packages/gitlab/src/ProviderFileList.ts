@@ -1,4 +1,4 @@
-import { BaseProviderFileList, ProviderFileListOptions } from "../../BaseProviderFileList";
+import { BaseProviderFileList, ProviderFileListOptions } from "@react-admin-git-provider/common";
 import { GitlabProviderAPI } from "./GitlabProviderAPI";
 
 export class ProviderFileList extends BaseProviderFileList {

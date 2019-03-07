@@ -1,8 +1,7 @@
-import { Pipelines } from "gitlab";
-import { createInstance as createCacheInstance } from "localforage";
-import pLimit from "p-limit";
-import { cacheStoreGetOrSet } from "../../cache";
 import {
+  CacheStore,
+  cacheStoreGetOrSet,
+  createCacheInstance,
   CreateParams,
   DeleteManyParams,
   DeleteParams,
@@ -15,7 +14,9 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../types";
+} from "@react-admin-git-provider/common";
+import { Pipelines } from "gitlab";
+import pLimit from "p-limit";
 import { getToken } from "./authProvider";
 
 interface IPipeline {
@@ -27,7 +28,7 @@ export class ProviderPipeline implements IProvider {
   private readonly pipelines: Pipelines;
   private readonly projectId: string;
   private readonly ref: string;
-  private readonly cacheStore: LocalForage;
+  private readonly cacheStore: CacheStore;
 
   constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
     this.projectId = projectId;

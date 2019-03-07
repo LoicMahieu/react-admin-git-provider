@@ -1,3 +1,8 @@
+import { createInstance as createCacheInstance } from "localforage";
+
+export type CacheStore = LocalForage;
+export { createCacheInstance };
+
 export const cacheStoreGetOrSet = async (
   cacheStore: LocalForage,
   key: string,
@@ -10,7 +15,7 @@ export const cacheStoreGetOrSet = async (
     if (check) {
       return cached;
     } else {
-      console.warn('cached invalidation for', key)
+      console.warn("cached invalidation for", key);
     }
   }
   const value = await getFn();

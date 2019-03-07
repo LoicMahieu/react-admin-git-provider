@@ -1,10 +1,10 @@
-import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import {
   BaseProviderAPI,
   BaseProviderAPICommitAction,
   BaseProviderAPIFile,
   BaseProviderAPITreeFile,
-} from "../../BaseProviderAPI";
+} from "@react-admin-git-provider/common";
+import { Commits, Repositories, RepositoryFiles } from "gitlab";
 import { getToken } from "./authProvider";
 
 interface GitlabOptions {

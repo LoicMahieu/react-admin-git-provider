@@ -1,4 +1,3 @@
-import { Commits } from "gitlab";
 import {
   CreateParams,
   DeleteManyParams,
@@ -12,45 +11,54 @@ import {
   Record,
   UpdateManyParams,
   UpdateParams,
-} from "../../types";
+} from "@react-admin-git-provider/common";
+import { Branches } from "gitlab";
 import { getToken } from "./authProvider";
 
-interface ICommit {
-  id: string;
+interface IBranch {
+  name: string;
+  commit: string;
 }
 
-export class ProviderCommit implements IProvider {
-  private readonly commits: Commits;
+export class ProviderBranch implements IProvider {
+  private readonly branches: Branches;
   private readonly projectId: string;
-  private readonly ref: string;
 
-  constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
+  constructor({ gitlabOptions, projectId }: ProviderOptions) {
     this.projectId = projectId;
-    this.commits = new Commits({
+    this.branches = new Branches({
       ...gitlabOptions,
       oauthToken: getToken(),
     });
-    this.ref = ref;
   }
 
   public async getList(params: ListParams) {
-    const commits = (await this.commits.all(this.projectId, {
-      ref: this.ref,
-    })) as ICommit[];
+    const branchList = (await this.branches.all(this.projectId, {
+      search: "",
+    })) as IBranch[];
+    const branches: Record[] = branchList.map(branch => ({
+      ...branch,
+      id: branch.name,
+    }));
 
     return {
-      data: commits,
-      total: commits.length,
+      data: branches,
+      total: branches.length,
     };
   }
 
   public async getOne(params: GetOneParams) {
-    const commit = (await this.commits.show(
+    const rawBranch = (await this.branches.show(
       this.projectId,
       params.id,
-    )) as ICommit;
+    )) as IBranch;
+    const branch: Record = {
+      ...rawBranch,
+      id: rawBranch.name,
+    };
+
     return {
-      data: commit,
+      data: branch,
     };
   }
 

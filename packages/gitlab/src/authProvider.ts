@@ -1,5 +1,4 @@
 import querystring from "querystring";
-import uuid from "uuid";
 
 const KEY = 'react-admin.gitlab-provider.token'
 
@@ -55,7 +54,7 @@ function getOAuthRedirect(options: AuthOptions) {
     redirect_uri: `${window.location.origin}${window.location.pathname}`,
     response_type: "token",
     scope: "api",
-    state: uuid(),
+    state: new Date().toString(),
   });
   return `${options.baseUrl || "https://gitlab.com"}/oauth/authorize?${data}`;
 }

@@ -25,7 +25,7 @@ import {
   createDataProvider,
   gitlabAuth,
   GitlabProviderFileList,
-} from "react-admin-git-provider";
+} from "@react-admin-git-provider/gitlab";
 
 const authProvider = gitlabAuth.createAuthProvider({
   baseUrl: process.env.GITLAB_OAUTH_BASE_URL,
