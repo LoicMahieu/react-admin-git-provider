@@ -1,14 +1,29 @@
-import { createInstance as createCacheInstance } from "localforage";
+import { createInstance } from "localforage";
 
 export type CacheStore = LocalForage;
-export { createCacheInstance };
+
+const cacheInstanceCache = new Map()
+const getCacheStore = (storeName: string) => {
+  if (cacheInstanceCache.has(storeName)) {
+    return cacheInstanceCache.get(storeName)
+  }
+  const store = createInstance({
+    name: "react-admin-git-provider",
+    storeName,
+  });
+
+  cacheInstanceCache.set(storeName, store)
+
+  return store
+}
 
 export const cacheStoreGetOrSet = async (
-  cacheStore: LocalForage,
+  storeName: string,
   key: string,
   getFn: () => Promise<any>,
   checkFn?: (cached: any) => boolean | null | undefined,
 ) => {
+  const cacheStore = getCacheStore(storeName);
   const cached = await cacheStore.getItem(key);
   if (cached) {
     const check = typeof checkFn === "function" ? checkFn(cached) : true;

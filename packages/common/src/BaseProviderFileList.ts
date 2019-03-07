@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
 import { BaseProviderAPI, BaseProviderAPIFile } from "./BaseProviderAPI";
-import { cacheStoreGetOrSet, createCacheInstance } from "./cache";
+import { cacheStoreGetOrSet } from "./cache";
 import {
   AnyEntitySerializer,
   ISerializers,
@@ -60,7 +60,6 @@ export class BaseProviderFileList implements IProvider {
   private readonly projectId: string;
   private readonly ref: string;
   private readonly basePath: string;
-  private readonly cacheStore: LocalForage;
   private readonly serializer: AnyEntitySerializer;
 
   constructor(
@@ -71,10 +70,6 @@ export class BaseProviderFileList implements IProvider {
     this.ref = ref;
     this.basePath = basePath || "/";
     this.api = api;
-    this.cacheStore = createCacheInstance({
-      name: "react-admin-git-provider",
-      storeName: "filelist",
-    });
     this.serializer = new serializers[serializer || "json"]();
   }
 
@@ -85,7 +80,7 @@ export class BaseProviderFileList implements IProvider {
     const files = await Promise.all(
       tree.map(async treeFile =>
         cacheStoreGetOrSet(
-          this.cacheStore,
+          "gitlab-file-list",
           treeFile.path,
           () =>
             limit(() =>

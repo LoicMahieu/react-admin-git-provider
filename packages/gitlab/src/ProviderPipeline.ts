@@ -1,7 +1,5 @@
 import {
-  CacheStore,
   cacheStoreGetOrSet,
-  createCacheInstance,
   CreateParams,
   DeleteManyParams,
   DeleteParams,
@@ -28,7 +26,6 @@ export class ProviderPipeline implements IProvider {
   private readonly pipelines: Pipelines;
   private readonly projectId: string;
   private readonly ref: string;
-  private readonly cacheStore: CacheStore;
 
   constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
     this.projectId = projectId;
@@ -36,10 +33,6 @@ export class ProviderPipeline implements IProvider {
     this.pipelines = new Pipelines({
       ...gitlabOptions,
       oauthToken: getToken(),
-    });
-    this.cacheStore = createCacheInstance({
-      name: "react-admin-gitlab",
-      storeName: "pipelines",
     });
   }
 
@@ -51,7 +44,7 @@ export class ProviderPipeline implements IProvider {
     const pipelines = (await Promise.all(
       pipelineList.map(pipeline =>
         cacheStoreGetOrSet(
-          this.cacheStore,
+          "gitlab-pipelines",
           `${pipeline.id}`,
           () => limit(() => this.pipelines.show(this.projectId, pipeline.id)),
           (cached: { sha?: string }) => {
