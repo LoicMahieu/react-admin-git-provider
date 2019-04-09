@@ -19,7 +19,7 @@ import { getToken } from "./authProvider";
 
 interface IPipeline {
   id: number;
-  sha: string;
+  sha: string
 }
 
 export class ProviderPipeline implements IProvider {
@@ -27,7 +27,7 @@ export class ProviderPipeline implements IProvider {
   private readonly projectId: string;
   private readonly ref: string;
 
-  constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
+  constructor ({ gitlabOptions, projectId, ref }: ProviderOptions) {
     this.projectId = projectId;
     this.ref = ref;
     this.pipelines = new Pipelines({

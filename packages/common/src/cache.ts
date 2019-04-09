@@ -1,7 +1,5 @@
 import { createInstance } from "localforage";
 
-export type CacheStore = LocalForage;
-
 const cacheInstanceCache = new Map()
 const getCacheStore = (storeName: string) => {
   if (cacheInstanceCache.has(storeName)) {
