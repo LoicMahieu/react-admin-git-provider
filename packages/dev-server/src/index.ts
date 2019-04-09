@@ -105,7 +105,7 @@ const readFile = (options: IOptions) =>
   asyncHandler(async (req, res, next) => {
     const absFilePath = path.join(options.cwd, req.params["0"]);
     if (!(await fs.pathExists(absFilePath))) {
-      return;
+      return next();
     }
 
     const stat = await fs.stat(absFilePath);
