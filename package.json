@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "tslint -p .",
+    "build": "lerna run --stream build",
     "start": "lerna run --stream --no-sort start"
   },
   "workspaces": [
