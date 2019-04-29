@@ -1,4 +1,4 @@
-import { orderBy } from "lodash";
+import orderBy from "lodash/orderBy";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";

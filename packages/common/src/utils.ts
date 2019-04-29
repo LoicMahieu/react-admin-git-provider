@@ -1,4 +1,5 @@
-import { every, some } from "lodash";
+import every from "lodash/every";
+import some from "lodash/some";
 
 type Filter =
   | {
