@@ -37,7 +37,7 @@ export class BaseProviderAPI {
     projectId: string,
     ref: string,
     path: string,
-  ): Promise<BaseProviderAPIFile> {
+  ): Promise<BaseProviderAPIFile | undefined> {
     throw new Error("Not implemented!");
   }
   public async commit(

@@ -101,14 +101,13 @@ export class BaseProviderFileList implements IProvider {
   }
 
   public async getOne(params: GetOneParams) {
+    const data = await this.api.showFile(
+      this.projectId,
+      this.ref,
+      this.getFilePath(params.id),
+    );
     return {
-      data: this.parseEntity(
-        await this.api.showFile(
-          this.projectId,
-          this.ref,
-          this.getFilePath(params.id),
-        ),
-      ),
+      data: data && this.parseEntity(data),
     };
   }
 
@@ -119,7 +118,9 @@ export class BaseProviderFileList implements IProvider {
       ),
     );
     return {
-      data: manyFiles.map(this.parseEntity),
+      data: manyFiles
+        .map(data => data && this.parseEntity(data))
+        .filter(<T>(n?: T): n is T => Boolean(n)),
     };
   }
 
@@ -166,14 +167,14 @@ export class BaseProviderFileList implements IProvider {
   }
 
   public async updateMany(params: UpdateManyParams) {
-    const entities = await Promise.all(
+    const entities = (await Promise.all(
       params.ids.map(
         async id =>
           (await this.getOne({
             id,
           })).data,
       ),
-    );
+    )).filter(<T>(n?: T): n is T => Boolean(n));
 
     const newEntities = entities.map(entity => ({
       ...entity,

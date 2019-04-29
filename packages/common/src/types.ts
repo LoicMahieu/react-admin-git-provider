@@ -51,7 +51,7 @@ export interface GetListOutput {
   total: number;
 }
 export interface GetOneOutput {
-  data: Record;
+  data: Record | undefined;
 }
 export type CreateOutput = GetOneOutput;
 export type UpdateOutput = GetOneOutput;
@@ -73,10 +73,6 @@ export interface ProviderOptions {
   projectId: string;
   ref: string;
   basePath?: string;
-  gitlabOptions?: {
-    oauthToken?: string;
-    host?: string
-  };
 }
 
 export declare class IProvider {

@@ -12,8 +12,12 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "@react-admin-git-provider/common";
-import { Branches } from "gitlab";
-import { getToken } from "./authProvider";
+import Ky from "ky";
+import {
+  getGitlabHeaders,
+  getGitlabUrl,
+  GitlabOptions,
+} from "./GitlabProviderAPI";
 
 interface IBranch {
   name: string;
@@ -21,21 +25,25 @@ interface IBranch {
 }
 
 export class ProviderBranch implements IProvider {
-  private readonly branches: Branches;
-  private readonly projectId: string;
+  private readonly url: string;
 
-  constructor({ gitlabOptions, projectId }: ProviderOptions) {
-    this.projectId = projectId;
-    this.branches = new Branches({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
+  constructor({
+    gitlabOptions,
+    projectId,
+  }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
+    this.url =
+      getGitlabUrl(gitlabOptions) +
+      "/" +
+      "projects/" +
+      encodeURIComponent(projectId) +
+      "/repository/branches";
   }
 
   public async getList(params: ListParams) {
-    const branchList = (await this.branches.all(this.projectId, {
-      search: "",
-    })) as IBranch[];
+    const response = Ky.get(this.url, {
+      headers: getGitlabHeaders(),
+    });
+    const branchList: IBranch[] = await response.json();
     const branches: Record[] = branchList.map(branch => ({
       ...branch,
       id: branch.name,
@@ -48,10 +56,10 @@ export class ProviderBranch implements IProvider {
   }
 
   public async getOne(params: GetOneParams) {
-    const rawBranch = (await this.branches.show(
-      this.projectId,
-      params.id,
-    )) as IBranch;
+    const response = Ky.get(this.url + "/" + params.id, {
+      headers: getGitlabHeaders(),
+    });
+    const rawBranch: IBranch = await response.json();
     const branch: Record = {
       ...rawBranch,
       id: rawBranch.name,

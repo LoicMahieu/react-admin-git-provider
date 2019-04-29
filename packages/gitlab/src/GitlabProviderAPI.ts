@@ -1,36 +1,69 @@
 import {
   BaseProviderAPI,
   BaseProviderAPICommitAction,
-  BaseProviderAPIFile,
   BaseProviderAPITreeFile,
 } from "@react-admin-git-provider/common";
-import { Commits, Repositories, RepositoryFiles } from "gitlab";
+import Ky from "ky";
+import querystring from "querystring";
 import { getToken } from "./authProvider";
 
-interface GitlabOptions {
-  oauthToken?: string;
+export interface GitlabOptions {
   host?: string;
+  version?: string;
+}
+
+const defaultOptions: GitlabOptions = {
+  host: "https://gitlab.com",
+  version: "v4",
+};
+
+interface GitlabFile {
+  file_name: string;
+  file_path: string;
+  size: number;
+  encoding: string;
+  content_sha256: string;
+  ref: string;
+  blob_id: string;
+  commit_id: string;
+  last_commit_id: string;
+  content: string;
+}
+
+interface GitlabCommitAction {
+  action: "create" | "delete" | "move" | "update";
+  file_path: string;
+  content?: string;
+}
+
+interface GitlabCommitBody {
+  actions: GitlabCommitAction[]
+  branch: string
+  commit_message: string
+}
+
+export function getGitlabUrl ({ host, version }: GitlabOptions) {
+  return [
+    host || defaultOptions.host,
+    "api",
+    version || defaultOptions.version,
+  ].join("/");
+}
+
+export function getGitlabHeaders () {
+  return {
+    authorization: `Bearer ${getToken()}`,
+  };
 }
 
 export class GitlabProviderAPI extends BaseProviderAPI {
-  private readonly repositories: Repositories;
-  private readonly repositoryFiles: RepositoryFiles;
-  private readonly commits: Commits;
+  private readonly url: string;
+  private readonly headers: { [header: string]: string };
 
-  constructor(gitlabOptions?: GitlabOptions) {
+  constructor(options: GitlabOptions) {
     super();
-    this.repositories = new Repositories({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
-    this.repositoryFiles = new RepositoryFiles({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
-    this.commits = new Commits({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
+    this.url = getGitlabUrl(options);
+    this.headers = getGitlabHeaders();
   }
 
   public async tree(projectId: string, ref: string, path: string) {
@@ -38,45 +71,81 @@ export class GitlabProviderAPI extends BaseProviderAPI {
     let result: BaseProviderAPITreeFile[] = [];
 
     while (nextPage) {
-      const data = (await this.repositories.tree(projectId, {
-        page: nextPage,
-        path,
-        ref,
-        showPagination: true,
-      })) as {
-        data: BaseProviderAPITreeFile[];
-        pagination: {
-          total: number;
-          next: number | null;
-          current: number | null;
-          previous: number | null;
-          perPage: number;
-          totalPages: number;
-        };
-      };
-
-      result = [...result, ...data.data];
-      nextPage = data.pagination.next || 0;
+      const response = Ky.get(
+        this.url +
+          "/" +
+          "projects/" +
+          encodeURIComponent(projectId) +
+          "/repository/tree?" +
+          querystring.stringify({
+            page: nextPage,
+            path,
+            ref,
+          }),
+        {
+          headers: this.headers,
+        },
+      );
+      const { headers } = await response;
+      const body: BaseProviderAPITreeFile[] = await response.json();
+      nextPage = parseInt(headers.get("X-Next-Page") || "", 10) || 0;
+      result = [...result, ...body];
     }
 
     return result;
   }
 
   public async showFile(projectId: string, ref: string, path: string) {
-    return this.repositoryFiles.show(
-      projectId,
-      path,
-      ref,
-    ) as Promise<BaseProviderAPIFile>;
+    const response = await Ky.get(
+      this.url +
+        "/" +
+        "projects/" +
+        encodeURIComponent(projectId) +
+        "/repository/files/" +
+        encodeURIComponent(path) +
+        "?" +
+        querystring.stringify({
+          ref,
+        }),
+      {
+        headers: this.headers,
+      },
+    );
+    const body: GitlabFile = await response.json();
+    return {
+      blobId: body.blob_id,
+      content: body.content,
+      encoding: body.encoding,
+      filePath: body.file_path,
+    };
   }
 
-  public async commit(projectId: string, ref: string, message: string, action: BaseProviderAPICommitAction[]) {
-    await this.commits.create(
-      projectId,
-      ref,
-      message,
-      action,
-      {},
+  public async commit(
+    projectId: string,
+    ref: string,
+    message: string,
+    actions: BaseProviderAPICommitAction[],
+  ) {
+    const commitBody: GitlabCommitBody = {
+      actions: actions.map(({ action, filePath, content }) => ({
+        action,
+        content,
+        file_path: filePath,
+      })),
+      branch: ref,
+      commit_message: message,
+    }
+
+    await Ky.post(
+      this.url +
+        "/" +
+        "projects/" +
+        encodeURIComponent(projectId) +
+        "/repository/commits",
+      {
+        headers: this.headers,
+        json: commitBody,
+      },
     );
   }
 }

@@ -13,40 +13,61 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "@react-admin-git-provider/common";
-import { Pipelines } from "gitlab";
+import Ky from "ky";
 import pLimit from "p-limit";
-import { getToken } from "./authProvider";
+import querystring from "querystring";
+import {
+  getGitlabHeaders,
+  getGitlabUrl,
+  GitlabOptions,
+} from "./GitlabProviderAPI";
 
 interface IPipeline {
   id: number;
-  sha: string
+  sha: string;
 }
 
 export class ProviderPipeline implements IProvider {
-  private readonly pipelines: Pipelines;
-  private readonly projectId: string;
   private readonly ref: string;
+  private readonly url: string;
 
-  constructor ({ gitlabOptions, projectId, ref }: ProviderOptions) {
-    this.projectId = projectId;
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+  }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
     this.ref = ref;
-    this.pipelines = new Pipelines({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
+    this.url =
+      getGitlabUrl(gitlabOptions) +
+      "/" +
+      "projects/" +
+      encodeURIComponent(projectId) +
+      "/pipelines";
   }
 
   public async getList(params: ListParams) {
-    const pipelineList = (await this.pipelines.all(this.projectId, {
-      ref: this.ref,
-    })) as IPipeline[];
+    const response = Ky.get(
+      this.url +
+        "?" +
+        querystring.stringify({
+          ref: this.ref,
+        }),
+      {
+        headers: getGitlabHeaders(),
+      },
+    );
+    const pipelineList: IPipeline[] = await response.json();
+
     const limit = pLimit(5);
     const pipelines = (await Promise.all(
       pipelineList.map(pipeline =>
         cacheStoreGetOrSet(
           "gitlab-pipelines",
           `${pipeline.id}`,
-          () => limit(() => this.pipelines.show(this.projectId, pipeline.id)),
+          () =>
+            limit(
+              async () => (await this.getOne({ id: `${pipeline.id}` })).data,
+            ),
           (cached: { sha?: string }) => {
             return cached.sha === pipeline.sha;
           },
@@ -61,11 +82,12 @@ export class ProviderPipeline implements IProvider {
   }
 
   public async getOne(params: GetOneParams) {
+    const response = Ky.get(this.url + "/" + params.id, {
+      headers: getGitlabHeaders(),
+    });
+    const data: Record = await response.json();
     return {
-      data: (await this.pipelines.show(
-        this.projectId,
-        parseInt(params.id, 10),
-      )) as Record,
+      data,
     };
   }
 

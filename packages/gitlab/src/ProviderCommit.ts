@@ -12,32 +12,48 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "@react-admin-git-provider/common";
-import { Commits } from "gitlab";
-import { getToken } from "./authProvider";
+import Ky from "ky";
+import querystring from "querystring";
+import {
+  getGitlabHeaders,
+  getGitlabUrl,
+  GitlabOptions,
+} from "./GitlabProviderAPI";
 
 interface ICommit {
   id: string;
 }
 
 export class ProviderCommit implements IProvider {
-  private readonly commits: Commits;
-  private readonly projectId: string;
+  private readonly url: string;
   private readonly ref: string;
 
-  constructor({ gitlabOptions, projectId, ref }: ProviderOptions) {
-    this.projectId = projectId;
-    this.commits = new Commits({
-      ...gitlabOptions,
-      oauthToken: getToken(),
-    });
+  constructor({
+    gitlabOptions,
+    projectId,
+    ref,
+  }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
     this.ref = ref;
+    this.url =
+      getGitlabUrl(gitlabOptions) +
+      "/" +
+      "projects/" +
+      encodeURIComponent(projectId) +
+      "/repository/commits";
   }
 
   public async getList(params: ListParams) {
-    const commits = (await this.commits.all(this.projectId, {
-      ref: this.ref,
-    })) as ICommit[];
-
+    const response = Ky.get(
+      this.url +
+        "?" +
+        querystring.stringify({
+          ref: this.ref,
+        }),
+      {
+        headers: getGitlabHeaders(),
+      },
+    );
+    const commits: ICommit[] = await response.json();
     return {
       data: commits,
       total: commits.length,
@@ -45,10 +61,10 @@ export class ProviderCommit implements IProvider {
   }
 
   public async getOne(params: GetOneParams) {
-    const commit = (await this.commits.show(
-      this.projectId,
-      params.id,
-    )) as ICommit;
+    const response = Ky.get(this.url + params.id, {
+      headers: getGitlabHeaders(),
+    });
+    const commit: ICommit = await response.json();
     return {
       data: commit,
     };

@@ -11,7 +11,7 @@
   "scripts": {
     "test": "npm run build",
     "build": "rm -rf lib/* && tsc",
-    "watch": "yarn build && tsc -w",
+    "start": "tsc -w",
     "prepare": "yarn build"
   },
   "publishConfig": {
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@react-admin-git-provider/common": "^0.0.1",
-    "gitlab": "LoicMahieu/node-gitlab#feature/request-ky-build",
+    "ky": "^0.10.0",
     "p-limit": "^2.2.0"
   },
   "devDependencies": {
