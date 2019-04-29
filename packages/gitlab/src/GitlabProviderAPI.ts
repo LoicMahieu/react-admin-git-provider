@@ -21,7 +21,7 @@ interface GitlabFile {
   file_name: string;
   file_path: string;
   size: number;
-  encoding: string;
+  encoding: "base64";
   content_sha256: string;
   ref: string;
   blob_id: string;
