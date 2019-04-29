@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { userLogin } from "react-admin";
-import { LockOutlined } from "@material-ui/icons";
+import LockOutline from "@material-ui/icons/LockOutline";
 import { Avatar, Button, CssBaseline, Paper } from "@material-ui/core";
 import withStyles from "@material-ui/core/styles/withStyles";
 
