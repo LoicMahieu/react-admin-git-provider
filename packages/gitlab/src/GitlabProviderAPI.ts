@@ -9,11 +9,13 @@ import { getToken } from "./authProvider";
 
 export interface GitlabOptions {
   host?: string;
+  timeout?: number;
   version?: string;
 }
 
 const defaultOptions: GitlabOptions = {
   host: "https://gitlab.com",
+  timeout: 30000,
   version: "v4",
 };
 
@@ -59,11 +61,13 @@ export function getGitlabHeaders () {
 export class GitlabProviderAPI extends BaseProviderAPI {
   private readonly url: string;
   private readonly headers: { [header: string]: string };
+  private readonly timeout?: number;
 
   constructor(options: GitlabOptions) {
     super();
     this.url = getGitlabUrl(options);
     this.headers = getGitlabHeaders();
+    this.timeout = options.timeout;
   }
 
   public async tree(projectId: string, ref: string, path: string) {
@@ -84,6 +88,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
           }),
         {
           headers: this.headers,
+          timeout: this.timeout,
         },
       );
       const { headers } = await response;
@@ -109,6 +114,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         }),
       {
         headers: this.headers,
+        timeout: this.timeout,
       },
     );
     const body: GitlabFile = await response.json();
@@ -145,6 +151,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
       {
         headers: this.headers,
         json: commitBody,
+        timeout: this.timeout,
       },
     );
   }
