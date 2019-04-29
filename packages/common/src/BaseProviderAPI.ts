@@ -6,7 +6,7 @@ export interface BaseProviderAPITreeFile {
 export interface BaseProviderAPIFile {
   blobId: string;
   content: string;
-  encoding: string;
+  encoding: "base64";
   filePath: string;
 }
 

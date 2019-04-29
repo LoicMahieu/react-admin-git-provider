@@ -79,7 +79,7 @@ export function filterItems(items: any[], filter: Filter) {
     });
     // only the items matching all filters functions are in (AND logic)
     return items.filter(item =>
-      filterFunctions.reduce(
+      filterFunctions.reduce<boolean>(
         (selected, filterFunction) => selected && filterFunction(item),
         true,
       ),
