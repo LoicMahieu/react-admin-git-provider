@@ -52,7 +52,7 @@ function SignIn(props) {
       <CssBaseline />
       <Paper className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <LockOutlined />
+          <LockOutline />
         </Avatar>
         <form className={classes.form} onSubmit={onSubmit}>
           <Button
