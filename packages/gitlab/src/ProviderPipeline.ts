@@ -30,12 +30,14 @@ interface IPipeline {
 export class ProviderPipeline implements IProvider {
   private readonly ref: string;
   private readonly url: string;
+  private readonly headers: { [key: string]: string };
 
   constructor({
     gitlabOptions,
     projectId,
     ref,
   }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
+    this.headers = getGitlabHeaders(gitlabOptions);
     this.ref = ref;
     this.url =
       getGitlabUrl(gitlabOptions) +
@@ -53,7 +55,7 @@ export class ProviderPipeline implements IProvider {
           ref: this.ref,
         }),
       {
-        headers: getGitlabHeaders(),
+        headers: this.headers,
       },
     );
     const pipelineList: IPipeline[] = await response.json();
@@ -83,7 +85,7 @@ export class ProviderPipeline implements IProvider {
 
   public async getOne(params: GetOneParams) {
     const response = Ky.get(this.url + "/" + params.id, {
-      headers: getGitlabHeaders(),
+      headers: this.headers,
     });
     const data: Record = await response.json();
     return {

@@ -26,11 +26,13 @@ interface IBranch {
 
 export class ProviderBranch implements IProvider {
   private readonly url: string;
+  private readonly headers: { [key: string]: string };
 
   constructor({
     gitlabOptions,
     projectId,
   }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
+    this.headers = getGitlabHeaders(gitlabOptions);
     this.url =
       getGitlabUrl(gitlabOptions) +
       "/" +
@@ -41,7 +43,7 @@ export class ProviderBranch implements IProvider {
 
   public async getList(params: ListParams) {
     const response = Ky.get(this.url, {
-      headers: getGitlabHeaders(),
+      headers: this.headers,
     });
     const branchList: IBranch[] = await response.json();
     const branches: Record[] = branchList.map(branch => ({
@@ -57,7 +59,7 @@ export class ProviderBranch implements IProvider {
 
   public async getOne(params: GetOneParams) {
     const response = Ky.get(this.url + "/" + params.id, {
-      headers: getGitlabHeaders(),
+      headers: this.headers,
     });
     const rawBranch: IBranch = await response.json();
     const branch: Record = {

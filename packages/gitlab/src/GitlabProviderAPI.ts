@@ -11,6 +11,7 @@ export interface GitlabOptions {
   host?: string;
   timeout?: number;
   version?: string;
+  oauthToken?: string;
 }
 
 const defaultOptions: GitlabOptions = {
@@ -52,9 +53,9 @@ export function getGitlabUrl ({ host, version }: GitlabOptions) {
   ].join("/");
 }
 
-export function getGitlabHeaders () {
+export function getGitlabHeaders ({ oauthToken }: GitlabOptions) {
   return {
-    authorization: `Bearer ${getToken()}`,
+    authorization: `Bearer ${oauthToken || getToken()}`,
   };
 }
 
@@ -66,7 +67,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
   constructor(options: GitlabOptions) {
     super();
     this.url = getGitlabUrl(options);
-    this.headers = getGitlabHeaders();
+    this.headers = getGitlabHeaders(options);
     this.timeout = options.timeout;
   }
 

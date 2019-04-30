@@ -27,12 +27,14 @@ interface ICommit {
 export class ProviderCommit implements IProvider {
   private readonly url: string;
   private readonly ref: string;
+  private readonly headers: { [key: string]: string };
 
   constructor({
     gitlabOptions,
     projectId,
     ref,
   }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
+    this.headers = getGitlabHeaders(gitlabOptions);
     this.ref = ref;
     this.url =
       getGitlabUrl(gitlabOptions) +
@@ -50,7 +52,7 @@ export class ProviderCommit implements IProvider {
           ref: this.ref,
         }),
       {
-        headers: getGitlabHeaders(),
+        headers: this.headers,
       },
     );
     const commits: ICommit[] = await response.json();
@@ -62,7 +64,7 @@ export class ProviderCommit implements IProvider {
 
   public async getOne(params: GetOneParams) {
     const response = Ky.get(this.url + params.id, {
-      headers: getGitlabHeaders(),
+      headers: this.headers,
     });
     const commit: ICommit = await response.json();
     return {
