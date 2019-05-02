@@ -1,19 +1,19 @@
 import { createInstance } from "localforage";
 
-const cacheInstanceCache = new Map()
+const cacheInstanceCache = new Map();
 const getCacheStore = (storeName: string) => {
   if (cacheInstanceCache.has(storeName)) {
-    return cacheInstanceCache.get(storeName)
+    return cacheInstanceCache.get(storeName);
   }
   const store = createInstance({
     name: "react-admin-git-provider",
     storeName,
   });
 
-  cacheInstanceCache.set(storeName, store)
+  cacheInstanceCache.set(storeName, store);
 
-  return store
-}
+  return store;
+};
 
 export const cacheStoreGetOrSet = async (
   storeName: string,

@@ -1,15 +1,15 @@
 import querystring from "querystring";
 
-const KEY = 'react-admin.gitlab-provider.token'
+const KEY = "react-admin.gitlab-provider.token";
 
-export function getToken () {
-  return window.sessionStorage.getItem(KEY) || undefined
+export function getToken() {
+  return window.sessionStorage.getItem(KEY) || undefined;
 }
-export function setToken (value: string) {
-  return window.sessionStorage.setItem(KEY, value)
+export function setToken(value: string) {
+  return window.sessionStorage.setItem(KEY, value);
 }
-export function removeToken () {
-  return window.sessionStorage.removeItem(KEY)
+export function removeToken() {
+  return window.sessionStorage.removeItem(KEY);
 }
 
 export interface AuthOptions {
