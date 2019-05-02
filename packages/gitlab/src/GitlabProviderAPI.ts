@@ -4,6 +4,7 @@ import {
   BaseProviderAPITreeFile,
 } from "@react-admin-git-provider/common";
 import Ky from "ky";
+import flatten from "lodash/flatten";
 import querystring from "querystring";
 import { getToken } from "./authProvider";
 
@@ -40,12 +41,12 @@ interface GitlabCommitAction {
 }
 
 interface GitlabCommitBody {
-  actions: GitlabCommitAction[]
-  branch: string
-  commit_message: string
+  actions: GitlabCommitAction[];
+  branch: string;
+  commit_message: string;
 }
 
-export function getGitlabUrl ({ host, version }: GitlabOptions) {
+export function getGitlabUrl({ host, version }: GitlabOptions) {
   return [
     host || defaultOptions.host,
     "api",
@@ -53,7 +54,7 @@ export function getGitlabUrl ({ host, version }: GitlabOptions) {
   ].join("/");
 }
 
-export function getGitlabHeaders ({ oauthToken }: GitlabOptions) {
+export function getGitlabHeaders({ oauthToken }: GitlabOptions) {
   return {
     authorization: `Bearer ${oauthToken || getToken()}`,
   };
@@ -72,33 +73,24 @@ export class GitlabProviderAPI extends BaseProviderAPI {
   }
 
   public async tree(projectId: string, ref: string, path: string) {
-    let nextPage = 1;
-    let result: BaseProviderAPITreeFile[] = [];
-
-    while (nextPage) {
-      const response = Ky.get(
-        this.url +
-          "/" +
-          "projects/" +
-          encodeURIComponent(projectId) +
-          "/repository/tree?" +
-          querystring.stringify({
-            page: nextPage,
-            path,
+    const { headers, records } = await this._fetchTree(projectId, ref, path, 1);
+    const totalPage = parseInt(headers.get("X-Total-Pages") || "", 10) || 0;
+    const pages = Array(totalPage - 1).fill(0);
+    const nextRecords = flatten(
+      await Promise.all(
+        pages.map(async (z, page) => {
+          const { records: r } = await this._fetchTree(
+            projectId,
             ref,
-          }),
-        {
-          headers: this.headers,
-          timeout: this.timeout,
-        },
-      );
-      const { headers } = await response;
-      const body: BaseProviderAPITreeFile[] = await response.json();
-      nextPage = parseInt(headers.get("X-Next-Page") || "", 10) || 0;
-      result = [...result, ...body];
-    }
+            path,
+            page + 2,
+          );
+          return r;
+        }),
+      ),
+    );
 
-    return result;
+    return [...records, ...nextRecords];
   }
 
   public async showFile(projectId: string, ref: string, path: string) {
@@ -141,7 +133,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
       })),
       branch: ref,
       commit_message: message,
-    }
+    };
 
     await Ky.post(
       this.url +
@@ -155,5 +147,33 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         timeout: this.timeout,
       },
     );
+  }
+
+  private async _fetchTree(
+    projectId: string,
+    ref: string,
+    path: string,
+    page: number,
+  ) {
+    const response = Ky.get(
+      this.url +
+        "/" +
+        "projects/" +
+        encodeURIComponent(projectId) +
+        "/repository/tree?" +
+        querystring.stringify({
+          page,
+          path,
+          ref,
+        }),
+      {
+        headers: this.headers,
+        timeout: this.timeout,
+      },
+    );
+    const { headers } = await response;
+    const records: BaseProviderAPITreeFile[] = await response.json();
+
+    return { headers, records };
   }
 }
