@@ -13,6 +13,7 @@ export interface GitlabOptions {
   timeout?: number;
   version?: string;
   oauthToken?: string;
+  treePerPage?: number;
 }
 
 const defaultOptions: GitlabOptions = {
@@ -64,6 +65,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
   private readonly url: string;
   private readonly headers: { [header: string]: string };
   private readonly timeout?: number;
+  private readonly treePerPage: number = 10;
 
   constructor(options: GitlabOptions) {
     super();
@@ -164,6 +166,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         querystring.stringify({
           page,
           path,
+          per_page: this.treePerPage,
           ref,
         }),
       {
