@@ -32,6 +32,12 @@ export const cacheStoreGetOrSet = async (
     }
   }
   const value = await getFn();
-  await cacheStore.setItem(key, value);
+
+  try {
+    await cacheStore.setItem(key, value);
+  } catch (err) {
+    console.error(err);
+  }
+
   return value;
 };
