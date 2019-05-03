@@ -151,13 +151,17 @@ export class BaseProviderFileList implements IProvider {
   // TODO: check if data are equals, so skip commit
   public async update(params: UpdateParams) {
     const filePath = this.getFilePath(params.id);
-    await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
-      {
-        action: "update",
-        content: this.stringifyEntity(params.data as Record),
-        filePath: this.getFilePath(params.id),
-      },
-    ]);
+    const content = this.stringifyEntity(params.data as Record)
+    const previousContent = this.stringifyEntity(params.previousData as Record)
+    if (content !== previousContent) {
+      await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
+        {
+          action: "update",
+          content,
+          filePath: this.getFilePath(params.id),
+        },
+      ]);
+    }
     return {
       data: {
         id: params.id,

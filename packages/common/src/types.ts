@@ -25,6 +25,7 @@ export interface CreateParams {
 export interface UpdateParams {
   id: string;
   data: object;
+  previousData: object;
 }
 export interface UpdateManyParams {
   ids: string[];
