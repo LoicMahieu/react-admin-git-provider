@@ -77,7 +77,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
   public async tree(projectId: string, ref: string, path: string) {
     const { headers, records } = await this._fetchTree(projectId, ref, path, 1);
     const totalPage = parseInt(headers.get("X-Total-Pages") || "", 10) || 0;
-    const pages = Array(totalPage - 1).fill(0);
+    const pages = totalPage > 0 ? Array(totalPage - 1).fill(0) : [];
     const nextRecords = flatten(
       await Promise.all(
         pages.map(async (z, page) => {
