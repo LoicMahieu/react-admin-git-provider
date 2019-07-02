@@ -25,6 +25,7 @@ import {
 interface IPipeline {
   id: number;
   sha: string;
+  status: string;
 }
 
 export class ProviderPipeline implements IProvider {
@@ -43,14 +44,13 @@ export class ProviderPipeline implements IProvider {
       getGitlabUrl(gitlabOptions) +
       "/" +
       "projects/" +
-      encodeURIComponent(projectId) +
-      "/pipelines";
+      encodeURIComponent(projectId);
   }
 
   public async getList(params: ListParams) {
     const response = Ky.get(
       this.url +
-        "?" +
+        "/pipelines?" +
         querystring.stringify({
           ref: this.ref,
         }),
@@ -70,8 +70,10 @@ export class ProviderPipeline implements IProvider {
             limit(
               async () => (await this.getOne({ id: `${pipeline.id}` })).data,
             ),
-          (cached: { sha?: string }) => {
-            return cached.sha === pipeline.sha;
+          (cached: { sha?: string; status?: string }) => {
+            return (
+              cached.sha === pipeline.sha && cached.status === pipeline.status
+            );
           },
         ),
       ),
@@ -84,7 +86,7 @@ export class ProviderPipeline implements IProvider {
   }
 
   public async getOne(params: GetOneParams) {
-    const response = Ky.get(this.url + "/" + params.id, {
+    const response = Ky.get(this.url + "/pipelines/" + params.id, {
       headers: this.headers,
     });
     const data: Record = await response.json();
@@ -112,11 +114,21 @@ export class ProviderPipeline implements IProvider {
   }
 
   public async create(params: CreateParams) {
-    throw new Error("Not available");
-    return {
-      data: {
-        id: "string",
+    const response = Ky.post(
+      this.url +
+        "/pipeline?" +
+        querystring.stringify({
+          ref: this.ref,
+        }),
+      {
+        headers: this.headers,
       },
+    );
+
+    const pipeline = (await response.json()) as IPipeline;
+
+    return {
+      data: pipeline,
     };
   }
 
