@@ -13,10 +13,10 @@
     "packages/*"
   ],
   "devDependencies": {
-    "lerna": "^3.15.0",
+    "lerna": "^3.16.4",
     "prettier": "^1.18.2",
-    "tslint": "^5.18.0",
+    "tslint": "^5.20.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.5.2"
+    "typescript": "^3.6.3"
   }
 }
