@@ -1,3 +1,4 @@
+import { ObjectIterateeCustom, PartialShallow } from "lodash";
 import orderBy from "lodash/orderBy";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
@@ -25,6 +26,11 @@ import {
 } from "./types";
 import { filterItems } from "./utils";
 
+type FilterFn = (
+  collection: Record[],
+  predicate: { [k: string]: any },
+) => Record[];
+
 const sortRecords = (entities: Record[], params: ListParams): Record[] => {
   if (!params.sort || !params.sort.field || !params.sort.order) {
     return entities;
@@ -35,8 +41,8 @@ const sortRecords = (entities: Record[], params: ListParams): Record[] => {
     [params.sort.order.toLowerCase() as "asc" | "desc"],
   );
 };
-const filterRecords = (entities: Record[], params: ListParams): Record[] => {
-  return filterItems(entities, params.filter || {});
+const defaultFilterRecords: FilterFn = (entities, filter) => {
+  return filterItems(entities, filter);
 };
 const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
   if (
@@ -53,6 +59,7 @@ const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
 
 export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
+  filterFn?: FilterFn;
 }
 
 export class BaseProviderFileList implements IProvider {
@@ -61,16 +68,18 @@ export class BaseProviderFileList implements IProvider {
   private readonly ref: string;
   private readonly basePath: string;
   private readonly serializer: AnyEntitySerializer;
+  private readonly filterRecords: FilterFn;
 
   constructor(
     api: BaseProviderAPI,
-    { projectId, ref, basePath, serializer }: ProviderFileListOptions,
+    { projectId, ref, basePath, serializer, filterFn }: ProviderFileListOptions,
   ) {
     this.projectId = projectId;
     this.ref = ref;
     this.basePath = basePath || "/";
     this.api = api;
     this.serializer = new serializers[serializer || "json"]();
+    this.filterRecords = filterFn || defaultFilterRecords;
   }
 
   public async getList(params: ListParams = {}) {
@@ -91,11 +100,14 @@ export class BaseProviderFileList implements IProvider {
       ),
     );
 
+    const sorted = sortRecords(files.map(this.parseEntity), params);
+    const filtered = params.filter
+      ? this.filterRecords(sorted, params.filter)
+      : sorted;
+    const paginated = paginateRecords(filtered, params);
+
     return {
-      data: paginateRecords(
-        filterRecords(sortRecords(files.map(this.parseEntity), params), params),
-        params,
-      ),
+      data: paginated,
       total: tree.length,
     };
   }
@@ -151,8 +163,8 @@ export class BaseProviderFileList implements IProvider {
   // TODO: check if data are equals, so skip commit
   public async update(params: UpdateParams) {
     const filePath = this.getFilePath(params.id);
-    const content = this.stringifyEntity(params.data as Record)
-    const previousContent = this.stringifyEntity(params.previousData as Record)
+    const content = this.stringifyEntity(params.data as Record);
+    const previousContent = this.stringifyEntity(params.previousData as Record);
     if (content !== previousContent) {
       await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
         {
