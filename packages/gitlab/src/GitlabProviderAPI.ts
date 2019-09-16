@@ -1,14 +1,16 @@
 import {
+  AbstractAuthBridge,
   BaseProviderAPI,
   BaseProviderAPICommitAction,
   BaseProviderAPITreeFile,
+  LocalStorageAuthBridge,
 } from "@react-admin-git-provider/common";
 import Ky from "ky";
 import flatten from "lodash/flatten";
 import querystring from "querystring";
-import { getToken } from "./authProvider";
 
 export interface GitlabOptions {
+  authBridge: AbstractAuthBridge;
   host?: string;
   timeout?: number;
   version?: string;
@@ -17,6 +19,7 @@ export interface GitlabOptions {
 }
 
 const defaultOptions: GitlabOptions = {
+  authBridge: new LocalStorageAuthBridge(),
   host: "https://gitlab.com",
   timeout: 30000,
   version: "v4",
@@ -55,9 +58,9 @@ export function getGitlabUrl({ host, version }: GitlabOptions) {
   ].join("/");
 }
 
-export function getGitlabHeaders({ oauthToken }: GitlabOptions) {
+export function getGitlabHeaders({ oauthToken, authBridge }: GitlabOptions) {
   return {
-    authorization: `Bearer ${oauthToken || getToken()}`,
+    authorization: `Bearer ${oauthToken || authBridge.getToken()}`,
   };
 }
 

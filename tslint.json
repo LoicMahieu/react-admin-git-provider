@@ -8,7 +8,8 @@
   "rules": {
     "no-console": false,
     "interface-name": false,
-    "no-submodule-imports": false
+    "no-submodule-imports": false,
+    "max-classes-per-file": false
   },
   "rulesDirectory": []
 }
