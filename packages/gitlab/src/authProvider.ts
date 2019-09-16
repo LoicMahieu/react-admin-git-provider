@@ -39,7 +39,7 @@ export const createAuthProvider = (options: AuthOptions) => {
       return Promise.resolve();
     }
     if (type === "AUTH_CHECK") {
-      return defaultAuthBridge.getToken()
+      return authBridge.getToken()
         ? Promise.resolve()
         : Promise.reject();
     }
