@@ -5,7 +5,7 @@ import {
   BaseProviderAPITreeFile,
   LocalStorageAuthBridge,
 } from "@react-admin-git-provider/common";
-import Ky from "ky";
+import Ky from "ky-universal";
 import flatten from "lodash/flatten";
 import querystring from "querystring";
 

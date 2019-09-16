@@ -12,7 +12,7 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "@react-admin-git-provider/common";
-import Ky from "ky";
+import Ky from "ky-universal";
 import querystring from "querystring";
 import {
   getGitlabHeaders,
