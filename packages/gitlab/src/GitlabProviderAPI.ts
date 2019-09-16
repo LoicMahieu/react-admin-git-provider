@@ -10,7 +10,7 @@ import flatten from "lodash/flatten";
 import querystring from "querystring";
 
 export interface GitlabOptions {
-  authBridge: AbstractAuthBridge;
+  authBridge?: AbstractAuthBridge;
   host?: string;
   timeout?: number;
   version?: string;
@@ -19,7 +19,6 @@ export interface GitlabOptions {
 }
 
 const defaultOptions: GitlabOptions = {
-  authBridge: new LocalStorageAuthBridge(),
   host: "https://gitlab.com",
   timeout: 30000,
   version: "v4",
@@ -58,7 +57,10 @@ export function getGitlabUrl({ host, version }: GitlabOptions) {
   ].join("/");
 }
 
-export function getGitlabHeaders({ oauthToken, authBridge }: GitlabOptions) {
+export function getGitlabHeaders({
+  oauthToken,
+  authBridge = new LocalStorageAuthBridge(),
+}: GitlabOptions) {
   return {
     authorization: `Bearer ${oauthToken || authBridge.getToken()}`,
   };
