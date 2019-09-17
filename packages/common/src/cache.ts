@@ -20,7 +20,12 @@ export const cacheStoreGetOrSet = async (
   key: string,
   getFn: () => Promise<any>,
   checkFn?: (cached: any) => boolean | null | undefined,
+  enabled: boolean = true
 ) => {
+  if (!enabled) {
+    return getFn()
+  }
+
   const cacheStore = getCacheStore(storeName);
   const cached = await cacheStore.getItem(key);
   if (cached) {

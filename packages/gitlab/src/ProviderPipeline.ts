@@ -32,11 +32,13 @@ export class ProviderPipeline implements IProvider {
   private readonly ref: string;
   private readonly url: string;
   private readonly headers: { [key: string]: string };
+  private readonly cacheEnabled: boolean;
 
   constructor({
     gitlabOptions,
     projectId,
     ref,
+    cacheEnabled,
   }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
     this.headers = getGitlabHeaders(gitlabOptions);
     this.ref = ref;
@@ -45,6 +47,8 @@ export class ProviderPipeline implements IProvider {
       "/" +
       "projects/" +
       encodeURIComponent(projectId);
+    this.cacheEnabled =
+      typeof cacheEnabled !== "undefined" ? cacheEnabled : true;
   }
 
   public async getList(params: ListParams) {
@@ -75,6 +79,7 @@ export class ProviderPipeline implements IProvider {
               cached.sha === pipeline.sha && cached.status === pipeline.status
             );
           },
+          this.cacheEnabled,
         ),
       ),
     )) as Record[];

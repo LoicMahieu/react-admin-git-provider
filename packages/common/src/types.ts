@@ -74,6 +74,7 @@ export interface ProviderOptions {
   projectId: string;
   ref: string;
   basePath?: string;
+  cacheEnabled?: boolean;
 }
 
 export declare class IProvider {

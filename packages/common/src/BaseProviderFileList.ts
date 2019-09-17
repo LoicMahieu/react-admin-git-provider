@@ -69,10 +69,18 @@ export class BaseProviderFileList implements IProvider {
   private readonly basePath: string;
   private readonly serializer: AnyEntitySerializer;
   private readonly filterRecords: FilterFn;
+  private readonly cacheEnabled: boolean;
 
   constructor(
     api: BaseProviderAPI,
-    { projectId, ref, basePath, serializer, filterFn }: ProviderFileListOptions,
+    {
+      projectId,
+      ref,
+      basePath,
+      serializer,
+      filterFn,
+      cacheEnabled,
+    }: ProviderFileListOptions,
   ) {
     this.projectId = projectId;
     this.ref = ref;
@@ -80,6 +88,8 @@ export class BaseProviderFileList implements IProvider {
     this.api = api;
     this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;
+    this.cacheEnabled =
+      typeof cacheEnabled !== "undefined" ? cacheEnabled : true;
   }
 
   public async getList(params: ListParams = {}) {
@@ -96,6 +106,7 @@ export class BaseProviderFileList implements IProvider {
               this.api.showFile(this.projectId, this.ref, treeFile.path),
             ),
           (cached: { blobId?: string }) => cached.blobId === treeFile.id,
+          this.cacheEnabled,
         ),
       ),
     );
