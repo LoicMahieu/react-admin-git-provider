@@ -1,6 +1,6 @@
 {
   "name": "@react-admin-git-provider/gitlab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "files": [
     "lib/*"
   ],
@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@react-admin-git-provider/common": "^0.1.0",
+    "@react-admin-git-provider/common": "^0.2.0",
     "ky": "^0.14.0",
     "ky-universal": "^0.3.0",
     "lodash": "^4.17.15",
