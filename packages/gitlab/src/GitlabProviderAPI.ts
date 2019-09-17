@@ -15,6 +15,7 @@ export interface GitlabOptions {
   timeout?: number;
   version?: string;
   oauthToken?: string;
+  isPrivateToken?: boolean;
   treePerPage?: number;
 }
 
@@ -59,10 +60,14 @@ export function getGitlabUrl({ host, version }: GitlabOptions) {
 
 export function getGitlabHeaders({
   oauthToken,
+  isPrivateToken,
   authBridge = new LocalStorageAuthBridge(),
 }: GitlabOptions) {
+  const value = oauthToken || authBridge.getToken() || "";
+  const headerName = isPrivateToken ? "Private-Token" : "Authorization";
+  const headerValue = isPrivateToken ? value : `Bearer ${value}`;
   return {
-    authorization: `Bearer ${oauthToken || authBridge.getToken()}`,
+    [headerName]: headerValue,
   };
 }
 
