@@ -1,0 +1,33 @@
+{
+  "name": "@react-admin-git-provider/keyv-cache-provider",
+  "version": "0.0.0",
+  "files": [
+    "lib/*"
+  ],
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "author": "Loïc Mahieu <mahieuloic@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "npm run build",
+    "build": "rm -rf lib/* && tsc",
+    "start": "tsc -w",
+    "prepare": "yarn build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@react-admin-git-provider/common": "^0.2.0"
+  },
+  "peerDependencies": {
+    "keyv": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.18",
+    "@types/keyv": "^3.1.0",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.6.3"
+  }
+}

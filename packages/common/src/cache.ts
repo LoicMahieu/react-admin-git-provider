@@ -1,33 +1,12 @@
-import { createInstance } from "localforage";
-
-const cacheInstanceCache = new Map();
-const getCacheStore = (storeName: string) => {
-  if (cacheInstanceCache.has(storeName)) {
-    return cacheInstanceCache.get(storeName);
-  }
-  const store = createInstance({
-    name: "react-admin-git-provider",
-    storeName,
-  });
-
-  cacheInstanceCache.set(storeName, store);
-
-  return store;
-};
+import { CacheProvider } from "./cacheProviders";
 
 export const cacheStoreGetOrSet = async (
-  storeName: string,
+  cacheProvider: CacheProvider,
   key: string,
   getFn: () => Promise<any>,
   checkFn?: (cached: any) => boolean | null | undefined,
-  enabled: boolean = true
 ) => {
-  if (!enabled) {
-    return getFn()
-  }
-
-  const cacheStore = getCacheStore(storeName);
-  const cached = await cacheStore.getItem(key);
+  const cached = await cacheProvider.get(key);
   if (cached) {
     const check = typeof checkFn === "function" ? checkFn(cached) : true;
     if (check) {
@@ -39,7 +18,7 @@ export const cacheStoreGetOrSet = async (
   const value = await getFn();
 
   try {
-    await cacheStore.setItem(key, value);
+    await cacheProvider.set(key, value);
   } catch (err) {
     console.error(err);
   }

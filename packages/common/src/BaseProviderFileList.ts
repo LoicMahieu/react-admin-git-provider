@@ -3,8 +3,14 @@ import orderBy from "lodash/orderBy";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
 import uuid from "uuid";
-import { BaseProviderAPI, BaseProviderAPIFile } from "./BaseProviderAPI";
+import {
+  BaseProviderAPI,
+  BaseProviderAPIFile,
+  BaseProviderAPITreeFile,
+} from "./BaseProviderAPI";
 import { cacheStoreGetOrSet } from "./cache";
+import { CacheProvider } from "./cacheProviders/CacheProvider";
+import { DisabledCacheProvider } from "./cacheProviders/DisabledCacheProvider";
 import {
   AnyEntitySerializer,
   ISerializers,
@@ -60,6 +66,7 @@ const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
 export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
   filterFn?: FilterFn;
+  cacheProvider?: CacheProvider;
 }
 
 export class BaseProviderFileList implements IProvider {
@@ -69,7 +76,7 @@ export class BaseProviderFileList implements IProvider {
   private readonly basePath: string;
   private readonly serializer: AnyEntitySerializer;
   private readonly filterRecords: FilterFn;
-  private readonly cacheEnabled: boolean;
+  private readonly cacheProvider: CacheProvider;
 
   constructor(
     api: BaseProviderAPI,
@@ -79,7 +86,7 @@ export class BaseProviderFileList implements IProvider {
       basePath,
       serializer,
       filterFn,
-      cacheEnabled,
+      cacheProvider,
     }: ProviderFileListOptions,
   ) {
     this.projectId = projectId;
@@ -88,25 +95,46 @@ export class BaseProviderFileList implements IProvider {
     this.api = api;
     this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;
-    this.cacheEnabled =
-      typeof cacheEnabled !== "undefined" ? cacheEnabled : true;
+    this.cacheProvider = cacheProvider || new DisabledCacheProvider();
   }
 
   public async getList(params: ListParams = {}) {
-    const tree = await this.api.tree(this.projectId, this.ref, this.basePath);
+    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
+    const cacheKey = `tree.${this.ref}.${this.basePath}`;
+    const lastBranchCommitId = await this.cacheProvider.get(
+      cacheKeyBranchCommitId,
+    );
+    const branch = await this.api.branch(this.projectId, this.ref);
+    const cached =
+      branch &&
+      lastBranchCommitId === branch.commit.id &&
+      (await this.cacheProvider.get<BaseProviderAPITreeFile[]>(cacheKey));
+    const [tree] = cached
+      ? [cached]
+      : await Promise.all([
+          this.api.tree(this.projectId, this.ref, this.basePath),
+          branch &&
+            (await this.cacheProvider.set(
+              cacheKeyBranchCommitId,
+              branch.commit.id,
+            )),
+        ]);
+
+    if (!cached) {
+      this.cacheProvider.set(cacheKey, tree)
+    }
 
     const limit = pLimit(5);
     const files = await Promise.all(
       tree.map(async treeFile =>
         cacheStoreGetOrSet(
-          "gitlab-file-list",
+          this.cacheProvider,
           treeFile.path,
           () =>
             limit(() =>
               this.api.showFile(this.projectId, this.ref, treeFile.path),
             ),
-          (cached: { blobId?: string }) => cached.blobId === treeFile.id,
-          this.cacheEnabled,
+          (c: { blobId?: string }) => c.blobId === treeFile.id,
         ),
       ),
     );

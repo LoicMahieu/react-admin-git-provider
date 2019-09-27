@@ -1,6 +1,7 @@
 import {
   AbstractAuthBridge,
   BaseProviderAPI,
+  BaseProviderAPIBranch,
   BaseProviderAPICommitAction,
   BaseProviderAPITreeFile,
   LocalStorageAuthBridge,
@@ -159,6 +160,23 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         timeout: this.timeout,
       },
     );
+  }
+
+  public async branch(projectId: string, ref: string) {
+    const response = await Ky.get(
+      this.url +
+        "/" +
+        "projects/" +
+        encodeURIComponent(projectId) +
+        "/repository/branches/" +
+        encodeURIComponent(ref),
+      {
+        headers: this.headers,
+        timeout: this.timeout,
+      },
+    );
+    const body: BaseProviderAPIBranch = await response.json();
+    return body;
   }
 
   private async _fetchTree(

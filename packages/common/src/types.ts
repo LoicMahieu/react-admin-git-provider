@@ -1,3 +1,5 @@
+import { CacheProvider } from "./cacheProviders";
+
 export interface ListParams {
   pagination?: {
     page?: number;
@@ -74,7 +76,7 @@ export interface ProviderOptions {
   projectId: string;
   ref: string;
   basePath?: string;
-  cacheEnabled?: boolean;
+  cacheProvider?: CacheProvider;
 }
 
 export declare class IProvider {

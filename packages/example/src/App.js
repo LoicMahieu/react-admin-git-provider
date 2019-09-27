@@ -31,6 +31,7 @@ import {
   GitlabProviderCommit,
 } from "@react-admin-git-provider/gitlab";
 import { LoginPage } from "./LoginPage";
+import { LocalforageCacheProvider } from "@react-admin-git-provider/common";
 
 gitlabAuth.initialCheckForToken();
 
@@ -64,6 +65,7 @@ const getProviderByResource = (resource) => {
     return createDataProvider(new GitlabProviderFileList({
       ...baseProviderOptions,
       basePath: `data/${resource}`,
+      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" })
     }));
 };
 

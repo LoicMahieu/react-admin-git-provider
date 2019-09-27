@@ -10,6 +10,13 @@ export interface BaseProviderAPIFile {
   filePath: string;
 }
 
+export interface BaseProviderAPIBranch {
+  name: string;
+  commit: {
+    id: string;
+  };
+}
+
 export interface BaseProviderAPICommitAction {
   /** The action to perform */
   action: "create" | "delete" | "move" | "update";
@@ -46,6 +53,12 @@ export class BaseProviderAPI {
     message: string,
     action: BaseProviderAPICommitAction[],
   ) {
+    throw new Error("Not implemented!");
+  }
+  public async branch(
+    projectId: string,
+    ref: string,
+  ): Promise<BaseProviderAPIBranch | undefined> {
     throw new Error("Not implemented!");
   }
 }

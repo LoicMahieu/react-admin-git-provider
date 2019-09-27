@@ -1,8 +1,10 @@
 import {
+  CacheProvider,
   cacheStoreGetOrSet,
   CreateParams,
   DeleteManyParams,
   DeleteParams,
+  DisabledCacheProvider,
   GetManyParams,
   GetManyReferenceParams,
   GetOneParams,
@@ -32,13 +34,13 @@ export class ProviderPipeline implements IProvider {
   private readonly ref: string;
   private readonly url: string;
   private readonly headers: { [key: string]: string };
-  private readonly cacheEnabled: boolean;
+  private readonly cacheProvider: CacheProvider;
 
   constructor({
     gitlabOptions,
     projectId,
     ref,
-    cacheEnabled,
+    cacheProvider,
   }: ProviderOptions & { gitlabOptions: GitlabOptions }) {
     this.headers = getGitlabHeaders(gitlabOptions);
     this.ref = ref;
@@ -47,8 +49,7 @@ export class ProviderPipeline implements IProvider {
       "/" +
       "projects/" +
       encodeURIComponent(projectId);
-    this.cacheEnabled =
-      typeof cacheEnabled !== "undefined" ? cacheEnabled : true;
+    this.cacheProvider = cacheProvider || new DisabledCacheProvider();
   }
 
   public async getList(params: ListParams) {
@@ -68,8 +69,8 @@ export class ProviderPipeline implements IProvider {
     const pipelines = (await Promise.all(
       pipelineList.map(pipeline =>
         cacheStoreGetOrSet(
-          "gitlab-pipelines",
-          `${pipeline.id}`,
+          this.cacheProvider,
+          `gitlab-pipelines:${pipeline.id}`,
           () =>
             limit(
               async () => (await this.getOne({ id: `${pipeline.id}` })).data,
@@ -79,7 +80,6 @@ export class ProviderPipeline implements IProvider {
               cached.sha === pipeline.sha && cached.status === pipeline.status
             );
           },
-          this.cacheEnabled,
         ),
       ),
     )) as Record[];
