@@ -1,6 +1,6 @@
 {
   "name": "@react-admin-git-provider/example",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
@@ -11,7 +11,7 @@
     "@babel/preset-react": "^7.0.0",
     "@material-ui/core": "^1",
     "@material-ui/icons": "^1",
-    "@react-admin-git-provider/gitlab": "^0.3.0",
+    "@react-admin-git-provider/gitlab": "^0.4.0",
     "babel-loader": "^8.0.6",
     "babel-polyfill": "^6.26.0",
     "html-webpack-plugin": "^3.2.0",
