@@ -1,7 +1,7 @@
 import { CacheProvider } from "@react-admin-git-provider/common";
 import Keyv from "keyv";
 
-export class LocalforageCacheProvider implements CacheProvider {
+export class KeyvCacheProvider implements CacheProvider {
   private readonly keyv: Keyv;
 
   constructor({ keyv }: { keyv: Keyv }) {

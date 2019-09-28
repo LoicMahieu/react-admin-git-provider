@@ -121,7 +121,7 @@ export class BaseProviderFileList implements IProvider {
         ]);
 
     if (!cached) {
-      this.cacheProvider.set(cacheKey, tree)
+      await this.cacheProvider.set(cacheKey, tree);
     }
 
     const limit = pLimit(5);
