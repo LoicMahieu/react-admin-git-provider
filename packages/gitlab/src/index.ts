@@ -3,6 +3,10 @@ import * as gitlabAuth from "./authProvider";
 import { ProviderBranch as GitlabProviderBranch } from "./ProviderBranch";
 import { ProviderCommit as GitlabProviderCommit } from "./ProviderCommit";
 import {
+  GitlabProviderFileOptions,
+  ProviderFile as GitlabProviderFile,
+} from "./ProviderFile";
+import {
   GitlabProviderFileListOptions,
   ProviderFileList as GitlabProviderFileList,
 } from "./ProviderFileList";
@@ -15,5 +19,7 @@ export {
   GitlabProviderCommit,
   GitlabProviderFileList,
   GitlabProviderFileListOptions,
+  GitlabProviderFile,
+  GitlabProviderFileOptions,
   GitlabProviderPipeline,
 };

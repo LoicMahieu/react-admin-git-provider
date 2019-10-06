@@ -26,6 +26,7 @@ import {
   gitlabAuth,
   createDataProvider,
   GitlabProviderPipeline,
+  GitlabProviderFile,
   GitlabProviderFileList,
   GitlabProviderBranch,
   GitlabProviderCommit,
@@ -61,10 +62,16 @@ const getProviderByResource = (resource) => {
     return createDataProvider(new GitlabProviderCommit({
       ...baseProviderOptions,
     }));
+  if (resource === "articles")
+    return createDataProvider(new GitlabProviderFile({
+      ...baseProviderOptions,
+      path: `data/${resource}.json`,
+      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" })
+    }));
   else
     return createDataProvider(new GitlabProviderFileList({
       ...baseProviderOptions,
-      basePath: `data/${resource}`,
+      path: `data/${resource}`,
       cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" })
     }));
 };
@@ -138,6 +145,40 @@ const UserCreate = props => (
   </Create>
 );
 
+const ArticleList = props => (
+  <List
+    {...props}
+    bulkActionButtons={<UserBulkActionButtons />}
+    filters={<UserFilter />}
+  >
+    <Datagrid rowClick="edit">
+      {/* <TextField source="id" /> */}
+      <BooleanField source="active" />
+      <TextField source="title" />
+      <EditButton />
+      <DeleteButton />
+    </Datagrid>
+  </List>
+);
+
+const ArticleEdit = props => (
+  <Edit {...props}>
+    <SimpleForm>
+      <BooleanInput source="active" />
+      <TextInput source="title" />
+    </SimpleForm>
+  </Edit>
+);
+
+const ArticleCreate = props => (
+  <Create {...props}>
+    <SimpleForm>
+      <BooleanInput source="active" />
+      <TextInput source="title" />
+    </SimpleForm>
+  </Create>
+);
+
 const PipelineList = props => (
   <List {...props}>
     <Datagrid rowClick="edit">
@@ -197,6 +238,12 @@ const App = () => (
       list={UserList}
       edit={UserEdit}
       create={UserCreate}
+    />
+    <Resource
+      name="articles"
+      list={ArticleList}
+      edit={ArticleEdit}
+      create={ArticleCreate}
     />
     <Resource name="pipelines" list={PipelineList} />
     <Resource name="branches" list={ListGuesser} />

@@ -75,7 +75,9 @@ export interface Record {
 export interface ProviderOptions {
   projectId: string;
   ref: string;
+  // Deprecated, use path
   basePath?: string;
+  path: string;
   cacheProvider?: CacheProvider;
 }
 

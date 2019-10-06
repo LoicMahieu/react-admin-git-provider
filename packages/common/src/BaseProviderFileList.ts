@@ -1,4 +1,4 @@
-import { ObjectIterateeCustom, PartialShallow } from "lodash";
+import depd from "depd";
 import orderBy from "lodash/orderBy";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
@@ -30,38 +30,14 @@ import {
   UpdateManyParams,
   UpdateParams,
 } from "./types";
-import { filterItems } from "./utils";
+import {
+  defaultFilterRecords,
+  FilterFn,
+  paginateRecords,
+  sortRecords,
+} from "./utils";
 
-type FilterFn = (
-  collection: Record[],
-  predicate: { [k: string]: any },
-) => Record[];
-
-const sortRecords = (entities: Record[], params: ListParams): Record[] => {
-  if (!params.sort || !params.sort.field || !params.sort.order) {
-    return entities;
-  }
-  return orderBy(
-    entities,
-    [params.sort.field],
-    [params.sort.order.toLowerCase() as "asc" | "desc"],
-  );
-};
-const defaultFilterRecords: FilterFn = (entities, filter) => {
-  return filterItems(entities, filter);
-};
-const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
-  if (
-    !params.pagination ||
-    !params.pagination.page ||
-    !params.pagination.perPage
-  ) {
-    return entities;
-  }
-  const start =
-    (params.pagination.page - 1) * (params.pagination.perPage || 10);
-  return entities.slice(start, start + (params.pagination.perPage || 10));
-};
+const deprecate = depd("react-admin-git-provider");
 
 export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
@@ -84,14 +60,18 @@ export class BaseProviderFileList implements IProvider {
       projectId,
       ref,
       basePath,
+      path,
       serializer,
       filterFn,
       cacheProvider,
     }: ProviderFileListOptions,
   ) {
+    if (basePath) {
+      deprecate("Option `basePath` is deprecated. Use `path` instead.");
+    }
     this.projectId = projectId;
     this.ref = ref;
-    this.basePath = basePath || "/";
+    this.basePath = path || basePath || "/";
     this.api = api;
     this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;

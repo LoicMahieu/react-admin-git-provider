@@ -1,5 +1,7 @@
 import every from "lodash/every";
+import orderBy from "lodash/orderBy";
 import some from "lodash/some";
+import { ListParams, Record } from "./types";
 
 type Filter =
   | {
@@ -88,3 +90,34 @@ export function filterItems(items: any[], filter: Filter) {
   }
   throw new Error("Unsupported filter type");
 }
+
+export type FilterFn = (
+  collection: Record[],
+  predicate: { [k: string]: any },
+) => Record[];
+
+export const sortRecords = (entities: Record[], params: ListParams): Record[] => {
+  if (!params.sort || !params.sort.field || !params.sort.order) {
+    return entities;
+  }
+  return orderBy(
+    entities,
+    [params.sort.field],
+    [params.sort.order.toLowerCase() as "asc" | "desc"],
+  );
+};
+export const defaultFilterRecords: FilterFn = (entities, filter) => {
+  return filterItems(entities, filter);
+};
+export const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
+  if (
+    !params.pagination ||
+    !params.pagination.page ||
+    !params.pagination.perPage
+  ) {
+    return entities;
+  }
+  const start =
+    (params.pagination.page - 1) * (params.pagination.perPage || 10);
+  return entities.slice(start, start + (params.pagination.perPage || 10));
+};

@@ -107,22 +107,28 @@ export class GitlabProviderAPI extends BaseProviderAPI {
   }
 
   public async showFile(projectId: string, ref: string, path: string) {
-    const response = await Ky.get(
-      this.url +
-        "/" +
-        "projects/" +
-        encodeURIComponent(projectId) +
-        "/repository/files/" +
-        encodeURIComponent(path) +
-        "?" +
-        querystring.stringify({
-          ref,
-        }),
-      {
-        headers: this.headers,
-        timeout: this.timeout,
-      },
-    );
+    let response: Response;
+    try {
+      response = await Ky.get(
+        this.url +
+          "/" +
+          "projects/" +
+          encodeURIComponent(projectId) +
+          "/repository/files/" +
+          encodeURIComponent(path) +
+          "?" +
+          querystring.stringify({
+            ref,
+          }),
+        {
+          headers: this.headers,
+          timeout: this.timeout,
+        },
+      );
+    } catch (err) {
+      console.error(err);
+      return;
+    }
     const body: GitlabFile = await response.json();
     return {
       blobId: body.blob_id,

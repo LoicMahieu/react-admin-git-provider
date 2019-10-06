@@ -18,12 +18,14 @@
     "access": "public"
   },
   "dependencies": {
+    "depd": "^2.0.0",
     "localforage": "^1.7.3",
     "lodash": "^4.17.15",
     "p-limit": "^2.2.1",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "@types/depd": "^1.1.32",
     "@types/jest": "^24.0.18",
     "@types/lodash": "^4.14.138",
     "@types/p-limit": "^2.2.0",
