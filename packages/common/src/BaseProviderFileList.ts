@@ -1,8 +1,7 @@
 import depd from "depd";
-import orderBy from "lodash/orderBy";
+import uuid from "nanoid";
 import pLimit from "p-limit";
 import { basename, extname } from "path";
-import uuid from "uuid";
 import {
   BaseProviderAPI,
   BaseProviderAPIFile,

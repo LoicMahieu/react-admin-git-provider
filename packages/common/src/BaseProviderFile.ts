@@ -1,4 +1,4 @@
-import uuid from "uuid";
+import uuid from "nanoid";
 import { BaseProviderAPI } from "./BaseProviderAPI";
 import { CacheProvider } from "./cacheProviders/CacheProvider";
 import { DisabledCacheProvider } from "./cacheProviders/DisabledCacheProvider";
