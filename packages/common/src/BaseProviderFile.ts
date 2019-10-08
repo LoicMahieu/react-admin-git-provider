@@ -125,7 +125,7 @@ export class BaseProviderFile implements IProvider {
   }
 
   public async update(params: UpdateParams) {
-    const data = this.createEntity(params.data);
+    const data = params.data as Record;
     const getRecords = await this.getRecords();
     const exists = getRecords.exists;
     let records = getRecords.records;
@@ -153,7 +153,7 @@ export class BaseProviderFile implements IProvider {
   }
 
   public async updateMany(params: UpdateManyParams) {
-    const data = this.createEntity(params.data);
+    const data = params.data as Record;
     const getRecords = await this.getRecords();
     const exists = getRecords.exists;
     let records = getRecords.records;
@@ -168,7 +168,10 @@ export class BaseProviderFile implements IProvider {
 
     records = records.map(r => {
       if (params.ids.includes(`${r.id}`)) {
-        return data;
+        return {
+          ...r,
+          ...data,
+        };
       } else {
         return r;
       }
