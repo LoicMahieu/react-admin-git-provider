@@ -140,7 +140,7 @@ export class BaseProviderFile implements IProvider {
 
     await this.updateRecords(
       exists,
-      `Update record #${params.id} in ${this.path}`,
+      `Update record ${params.id} in ${this.path}`,
       records,
     );
 
