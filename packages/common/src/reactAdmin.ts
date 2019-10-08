@@ -45,8 +45,10 @@ export const createDataProvider = (
   getProvider: IProvider | (({ resource }: { resource: string }) => IProvider),
 ) => {
   if (typeof getProvider === "function") {
+    const cache = new Map<string, IProvider>();
     return async (type: string, resource: string, params: Params) => {
-      const provider = getProvider({ resource });
+      const provider = cache.get(resource) || getProvider({ resource });
+      cache.set(resource, provider);
       const providerFn = createReactAdminProvider(provider);
       return providerFn(type, resource, params);
     };

@@ -31,7 +31,6 @@ import {
   GitlabProviderBranch,
   GitlabProviderCommit,
 } from "@react-admin-git-provider/gitlab";
-import { LoginPage } from "./LoginPage";
 import { LocalforageCacheProvider } from "@react-admin-git-provider/common";
 
 gitlabAuth.initialCheckForToken();
@@ -49,36 +48,32 @@ const baseProviderOptions = {
   },
 };
 
-const getProviderByResource = (resource) => {
+const dataProvider = createDataProvider(({ resource }) => {
   if (resource === "pipelines")
-    return createDataProvider(new GitlabProviderPipeline({
+    return new GitlabProviderPipeline({
       ...baseProviderOptions,
-    }));
+    });
   if (resource === "branches")
-    return createDataProvider(new GitlabProviderBranch({
+    return new GitlabProviderBranch({
       ...baseProviderOptions,
-    }));
+    });
   if (resource === "commits")
-    return createDataProvider(new GitlabProviderCommit({
+    return new GitlabProviderCommit({
       ...baseProviderOptions,
-    }));
+    });
   if (resource === "articles")
-    return createDataProvider(new GitlabProviderFile({
+    return new GitlabProviderFile({
       ...baseProviderOptions,
       path: `data/${resource}.json`,
-      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" })
-    }));
+      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" }),
+    });
   else
-    return createDataProvider(new GitlabProviderFileList({
+    return new GitlabProviderFileList({
       ...baseProviderOptions,
       path: `data/${resource}`,
-      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" })
-    }));
-};
-
-const dataProvider = (type, resource, params) => {
-  return getProviderByResource(resource)(type, resource, params);
-};
+      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" }),
+    });
+});
 
 const UserFilter = props => (
   <Filter {...props}>
@@ -224,8 +219,9 @@ export const CommitList = props => (
 const App = () => (
   <Admin
     dataProvider={dataProvider}
-    authProvider={authProvider}
-    loginPage={LoginPage}
+    authProvider={(type, { username, password } = {}) =>
+      authProvider(type, { login: username, password })
+    }
   >
     <Resource
       name="users"
