@@ -44,6 +44,7 @@ export class BaseProviderFile implements IProvider {
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
   private readonly cacheBehavior: "branch" | "contentSha";
+  private getRecordsPromise?: Promise<Record[]>;
 
   constructor(
     api: BaseProviderAPI,
@@ -68,10 +69,7 @@ export class BaseProviderFile implements IProvider {
   }
 
   public async getList(params: ListParams = {}) {
-    const records =
-      this.cacheBehavior === "branch"
-        ? await this.getRecordsWithBranchCache()
-        : await this.getRecordsWithContentShaCache();
+    const records = await this.getCachedRecords();
     const sorted = sortRecords(records, params);
     const filtered = params.filter
       ? this.filterRecords(sorted, params.filter)
@@ -244,6 +242,25 @@ export class BaseProviderFile implements IProvider {
     ...data,
     id: uuid(),
   });
+
+  private async getCachedRecords() {
+    if (this.getRecordsPromise) {
+      return this.getRecordsPromise;
+    }
+
+    const getRecordsPromise =
+      this.cacheBehavior === "branch"
+        ? this.getRecordsWithBranchCache()
+        : this.getRecordsWithContentShaCache();
+
+    this.getRecordsPromise = getRecordsPromise;
+
+    const records = await getRecordsPromise;
+
+    this.getRecordsPromise = undefined;
+
+    return records;
+  }
 
   private async getRecordsWithBranchCache() {
     const cacheKey = `tree.${this.ref}.${this.path}`;
