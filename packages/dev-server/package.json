@@ -24,7 +24,7 @@
     "express-async-handler": "^1.1.4",
     "fs-extra": "^8.1.0",
     "git": "^0.1.5",
-    "hasha": "^5.0.0"
+    "hasha": "^5.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.6",

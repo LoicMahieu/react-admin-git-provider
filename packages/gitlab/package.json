@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@react-admin-git-provider/common": "^0.4.0",
-    "ky": "^0.14.0",
+    "ky": "^0.15.0",
     "ky-universal": "^0.3.0",
     "lodash": "^4.17.15",
     "p-limit": "^2.2.1"
