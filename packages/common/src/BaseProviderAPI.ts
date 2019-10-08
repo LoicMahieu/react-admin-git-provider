@@ -17,6 +17,13 @@ export interface BaseProviderAPIBranch {
   };
 }
 
+export interface BaseProviderAPIFileInfo {
+  blobId: string;
+  commitId: string;
+  contentSha: string;
+  size: number;
+}
+
 export interface BaseProviderAPICommitAction {
   /** The action to perform */
   action: "create" | "delete" | "move" | "update";
@@ -45,6 +52,20 @@ export class BaseProviderAPI {
     ref: string,
     path: string,
   ): Promise<BaseProviderAPIFile | undefined> {
+    throw new Error("Not implemented!");
+  }
+  public async getRawFile(
+    projectId: string,
+    ref: string,
+    path: string,
+  ): Promise<any | undefined> {
+    throw new Error("Not implemented!");
+  }
+  public async getFileInfo(
+    projectId: string,
+    ref: string,
+    path: string,
+  ): Promise<BaseProviderAPIFileInfo | undefined> {
     throw new Error("Not implemented!");
   }
   public async commit(

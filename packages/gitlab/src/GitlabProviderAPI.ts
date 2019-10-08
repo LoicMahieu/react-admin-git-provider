@@ -138,6 +138,65 @@ export class GitlabProviderAPI extends BaseProviderAPI {
     };
   }
 
+  // Note: only works when proxying Gitlab due to missing expose headers in CORS
+  public async getFileInfo(projectId: string, ref: string, path: string) {
+    let response: Response;
+    try {
+      response = await Ky.head(
+        this.url +
+          "/" +
+          "projects/" +
+          encodeURIComponent(projectId) +
+          "/repository/files/" +
+          encodeURIComponent(path) +
+          "?" +
+          querystring.stringify({
+            ref,
+          }),
+        {
+          headers: this.headers,
+          timeout: this.timeout,
+        },
+      );
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+    const headers = response.headers;
+    return {
+      blobId: headers.get("X-Gitlab-Blob-Id") + "",
+      commitId: headers.get("X-Gitlab-Commit-Id") + "",
+      contentSha: headers.get("X-Gitlab-Content-Sha256") + "",
+      size: parseInt(headers.get("X-Gitlab-Size") || "0", 10),
+    };
+  }
+
+  public async getRawFile(projectId: string, ref: string, path: string) {
+    let response: Response;
+    try {
+      response = await Ky.get(
+        this.url +
+          "/" +
+          "projects/" +
+          encodeURIComponent(projectId) +
+          "/repository/files/" +
+          encodeURIComponent(path) +
+          "/raw?" +
+          querystring.stringify({
+            ref,
+          }),
+        {
+          headers: this.headers,
+          timeout: this.timeout,
+        },
+      );
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+    return response.text();
+  }
+
   public async commit(
     projectId: string,
     ref: string,

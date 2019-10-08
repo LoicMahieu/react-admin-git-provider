@@ -32,6 +32,7 @@ export interface ProviderFileOptions extends ProviderOptions {
   serializer: keyof ISerializers;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
+  cacheBehavior?: "branch" | "contentSha";
 }
 
 export class BaseProviderFile implements IProvider {
@@ -42,6 +43,7 @@ export class BaseProviderFile implements IProvider {
   private readonly serializer: AnyEntitySerializer;
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
+  private readonly cacheBehavior: "branch" | "contentSha";
 
   constructor(
     api: BaseProviderAPI,
@@ -52,6 +54,7 @@ export class BaseProviderFile implements IProvider {
       serializer,
       filterFn,
       cacheProvider,
+      cacheBehavior,
     }: ProviderFileOptions,
   ) {
     this.projectId = projectId;
@@ -61,41 +64,14 @@ export class BaseProviderFile implements IProvider {
     this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
+    this.cacheBehavior = cacheBehavior || "branch";
   }
 
   public async getList(params: ListParams = {}) {
-    const cacheKey = `tree.${this.ref}.${this.path}`;
-    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
-    const lastBranchCommitId = await this.cacheProvider.get(
-      cacheKeyBranchCommitId,
-    );
-    const branch = await this.api.branch(this.projectId, this.ref);
-    const cached =
-      branch &&
-      lastBranchCommitId === branch.commit.id &&
-      (await this.cacheProvider.get<Record[]>(cacheKey));
-    const [records] = cached
-      ? [cached]
-      : await Promise.all([
-          this.getRecords().then(v => v.records),
-          branch &&
-            (await this.cacheProvider.set(
-              cacheKeyBranchCommitId,
-              branch.commit.id,
-            )),
-        ]);
-
-    if (!records) {
-      return {
-        data: [],
-        total: 0,
-      };
-    }
-
-    if (!cached) {
-      await this.cacheProvider.set(cacheKey, records);
-    }
-
+    const records =
+      this.cacheBehavior === "branch"
+        ? await this.getRecordsWithBranchCache()
+        : await this.getRecordsWithContentShaCache();
     const sorted = sortRecords(records, params);
     const filtered = params.filter
       ? this.filterRecords(sorted, params.filter)
@@ -269,13 +245,77 @@ export class BaseProviderFile implements IProvider {
     id: uuid(),
   });
 
+  private async getRecordsWithBranchCache() {
+    const cacheKey = `tree.${this.ref}.${this.path}`;
+    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
+    const lastBranchCommitId = await this.cacheProvider.get(
+      cacheKeyBranchCommitId,
+    );
+    const branch = await this.api.branch(this.projectId, this.ref);
+    const cached =
+      branch &&
+      lastBranchCommitId === branch.commit.id &&
+      (await this.cacheProvider.get<Record[]>(cacheKey));
+    const [records] = cached
+      ? [cached]
+      : await Promise.all([
+          this.getRecords().then(v => v.records),
+          branch &&
+            (await this.cacheProvider.set(
+              cacheKeyBranchCommitId,
+              branch.commit.id,
+            )),
+        ]);
+
+    if (!records) {
+      return [];
+    }
+
+    if (!cached) {
+      await this.cacheProvider.set(cacheKey, records);
+    }
+
+    return records;
+  }
+
+  private async getRecordsWithContentShaCache() {
+    const cacheKey = `tree.${this.ref}.${this.path}`;
+    const cacheKeyContentSha = `contentSha.${this.ref}.${this.path}`;
+    const lastContentSha = await this.cacheProvider.get(cacheKeyContentSha);
+    const fileInfo = await this.api.getFileInfo(
+      this.projectId,
+      this.ref,
+      this.path,
+    );
+    const cached =
+      fileInfo &&
+      lastContentSha === fileInfo.contentSha &&
+      (await this.cacheProvider.get<Record[]>(cacheKey));
+    const [records] = cached
+      ? [cached]
+      : await Promise.all([
+          this.getRecords().then(v => v.records),
+          fileInfo &&
+            (await this.cacheProvider.set(
+              cacheKeyContentSha,
+              fileInfo.contentSha,
+            )),
+        ]);
+
+    if (!records) {
+      return [];
+    }
+
+    if (!cached) {
+      await this.cacheProvider.set(cacheKey, records);
+    }
+
+    return records;
+  }
+
   private async getRecords() {
-    const file = await this.api.showFile(this.projectId, this.ref, this.path);
-    const records: Record[] = file
-      ? this.serializer.parse(
-          Buffer.from(file.content, file.encoding).toString("utf8"),
-        )
-      : [];
+    const file = await this.api.getRawFile(this.projectId, this.ref, this.path);
+    const records: Record[] = file ? this.serializer.parse(file) : [];
     return { records, exists: !!file };
   }
 
