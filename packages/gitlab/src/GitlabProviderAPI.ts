@@ -82,7 +82,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
     super();
     this.url = getGitlabUrl(options);
     this.headers = getGitlabHeaders(options);
-    this.timeout = options.timeout;
+    this.timeout = options.timeout || defaultOptions.timeout;
   }
 
   public async tree(projectId: string, ref: string, path: string) {
