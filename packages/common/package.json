@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "depd": "^2.0.0",
+    "fast-deep-equal": "^2.0.1",
     "localforage": "^1.7.3",
     "lodash": "^4.17.15",
     "nanoid": "^2.1.2",

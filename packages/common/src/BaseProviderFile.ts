@@ -1,3 +1,4 @@
+import isEqual from "fast-deep-equal";
 import uuid from "nanoid";
 import { BaseProviderAPI } from "./BaseProviderAPI";
 import { CacheProvider } from "./cacheProviders/CacheProvider";
@@ -129,20 +130,24 @@ export class BaseProviderFile implements IProvider {
     const getRecords = await this.getRecords();
     const exists = getRecords.exists;
     let records = getRecords.records;
+    let hasChange = false;
 
     records = records.map(r => {
       if (r.id === params.id) {
+        hasChange = this.recordHasChanged(r, data);
         return data;
       } else {
         return r;
       }
     });
 
-    await this.updateRecords(
-      exists,
-      `Update record ${params.id} in ${this.path}`,
-      records,
-    );
+    if (hasChange) {
+      await this.updateRecords(
+        exists,
+        `Update record ${params.id} in ${this.path}`,
+        records,
+      );
+    }
 
     return {
       data: {
@@ -239,6 +244,10 @@ export class BaseProviderFile implements IProvider {
     );
 
     return { data: params.ids };
+  }
+
+  private recordHasChanged(previous: Record, next: Record) {
+    return !isEqual(previous, next);
   }
 
   private createEntity = (data: object): Record => ({
