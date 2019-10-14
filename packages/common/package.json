@@ -1,6 +1,6 @@
 {
   "name": "@react-admin-git-provider/common",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "files": [
     "lib/*"
   ],
