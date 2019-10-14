@@ -9,8 +9,11 @@ import {
   serializers,
 } from "./entitySerializers";
 import {
+  CreateOutput,
   CreateParams,
+  DeleteManyOutput,
   DeleteManyParams,
+  DeleteOutput,
   DeleteParams,
   GetManyParams,
   GetManyReferenceParams,
@@ -19,7 +22,9 @@ import {
   ListParams,
   ProviderOptions,
   Record,
+  UpdateManyOutput,
   UpdateManyParams,
+  UpdateOutput,
   UpdateParams,
 } from "./types";
 import {
@@ -46,6 +51,7 @@ export class BaseProviderFile implements IProvider {
   private readonly cacheProvider: CacheProvider;
   private readonly cacheBehavior: "branch" | "contentSha";
   private getRecordsPromise?: Promise<Record[]>;
+  private lockUpdate = Promise.resolve<any>(null);
 
   constructor(
     api: BaseProviderAPI,
@@ -111,139 +117,154 @@ export class BaseProviderFile implements IProvider {
   }
 
   public async create(params: CreateParams) {
-    const data = this.createEntity(params.data);
-    const { records, exists } = await this.getRecords();
+    return this.withUpdateLock<CreateOutput>(async () => {
+      const data = this.createEntity(params.data);
+      const { records, exists } = await this.getRecords();
 
-    records.push(data);
+      records.push(data);
 
-    await this.updateRecords(
-      exists,
-      `Create new record in ${this.path}`,
-      records,
-    );
+      await this.updateRecords(
+        exists,
+        `Create new record in ${this.path}`,
+        records,
+      );
 
-    return { data };
+      return { data };
+    });
   }
 
   public async update(params: UpdateParams) {
-    const data = params.data as Record;
-    const getRecords = await this.getRecords();
-    const exists = getRecords.exists;
-    let records = getRecords.records;
-    let hasChange = false;
+    return this.withUpdateLock<UpdateOutput>(async () => {
+      const data = params.data as Record;
+      const getRecords = await this.getRecords();
+      const exists = getRecords.exists;
+      let records = getRecords.records;
+      let hasChange = false;
 
-    records = records.map(r => {
-      if (r.id === params.id) {
-        hasChange = this.recordHasChanged(r, data);
-        return data;
-      } else {
-        return r;
+      records = records.map(r => {
+        if (r.id === params.id) {
+          hasChange = this.recordHasChanged(r, data);
+          return data;
+        } else {
+          return r;
+        }
+      });
+
+      if (hasChange) {
+        await this.updateRecords(
+          exists,
+          `Update record ${params.id} in ${this.path}`,
+          records,
+        );
       }
+
+      return {
+        data: {
+          id: params.id,
+          ...params.data,
+        },
+      };
     });
-
-    if (hasChange) {
-      await this.updateRecords(
-        exists,
-        `Update record ${params.id} in ${this.path}`,
-        records,
-      );
-    }
-
-    return {
-      data: {
-        id: params.id,
-        ...params.data,
-      },
-    };
   }
 
   public async updateMany(params: UpdateManyParams) {
-    const data = params.data as Record;
-    const getRecords = await this.getRecords();
-    const exists = getRecords.exists;
-    let records = getRecords.records;
+    return this.withUpdateLock<UpdateManyOutput>(async () => {
+      const data = params.data as Record;
+      const getRecords = await this.getRecords();
+      const exists = getRecords.exists;
+      let records = getRecords.records;
 
-    const newEntities: Record[] = params.ids.map(id => {
-      const record = records.find(r => r.id === id);
-      return {
-        ...record,
-        ...params.data,
-      };
-    }) as any;
-
-    records = records.map(r => {
-      if (params.ids.includes(`${r.id}`)) {
+      const newEntities: Record[] = params.ids.map(id => {
+        const record = records.find(r => r.id === id);
         return {
-          ...r,
-          ...data,
+          ...record,
+          ...params.data,
         };
-      } else {
-        return r;
-      }
+      }) as any;
+
+      records = records.map(r => {
+        if (params.ids.includes(`${r.id}`)) {
+          return {
+            ...r,
+            ...data,
+          };
+        } else {
+          return r;
+        }
+      });
+
+      await this.updateRecords(
+        exists,
+        `Update many records in ${this.path}`,
+        records,
+      );
+
+      return {
+        data: newEntities,
+      };
     });
-
-    await this.updateRecords(
-      exists,
-      `Update many records in ${this.path}`,
-      records,
-    );
-
-    return {
-      data: newEntities,
-    };
   }
 
   public async delete(params: DeleteParams) {
-    const getRecords = await this.getRecords();
-    const exists = getRecords.exists;
-    let records = getRecords.records;
+    return this.withUpdateLock<DeleteOutput>(async () => {
+      const getRecords = await this.getRecords();
+      const exists = getRecords.exists;
+      let records = getRecords.records;
 
-    records = (records
-      .map(r => {
-        if (r.id === params.id) {
-          return undefined;
-        } else {
-          return r;
-        }
-      })
-      .filter(Boolean) as any) as Record[];
+      records = (records
+        .map(r => {
+          if (r.id === params.id) {
+            return undefined;
+          } else {
+            return r;
+          }
+        })
+        .filter(Boolean) as any) as Record[];
 
-    await this.updateRecords(
-      exists,
-      `Delete record ${params.id} in ${this.path}`,
-      records,
-    );
+      await this.updateRecords(
+        exists,
+        `Delete record ${params.id} in ${this.path}`,
+        records,
+      );
 
-    return {
-      data: {
-        id: params.id,
-        ...params.previousData,
-      },
-    };
+      return {
+        data: {
+          id: params.id,
+          ...params.previousData,
+        },
+      };
+    });
   }
 
   public async deleteMany(params: DeleteManyParams) {
-    const getRecords = await this.getRecords();
-    const exists = getRecords.exists;
-    let records = getRecords.records;
+    return this.withUpdateLock<DeleteManyOutput>(async () => {
+      const getRecords = await this.getRecords();
+      const exists = getRecords.exists;
+      let records = getRecords.records;
 
-    records = (records
-      .map(r => {
-        if (params.ids.includes(`${r.id}`)) {
-          return undefined;
-        } else {
-          return r;
-        }
-      })
-      .filter(Boolean) as any) as Record[];
+      records = (records
+        .map(r => {
+          if (params.ids.includes(`${r.id}`)) {
+            return undefined;
+          } else {
+            return r;
+          }
+        })
+        .filter(Boolean) as any) as Record[];
 
-    await this.updateRecords(
-      exists,
-      `Delete many records in ${this.path}`,
-      records,
-    );
+      await this.updateRecords(
+        exists,
+        `Delete many records in ${this.path}`,
+        records,
+      );
 
-    return { data: params.ids };
+      return { data: params.ids };
+    });
+  }
+
+  private async withUpdateLock<T>(fn: () => Promise<T>): Promise<T> {
+    this.lockUpdate = this.lockUpdate.then(fn);
+    return this.lockUpdate;
   }
 
   private recordHasChanged(previous: Record, next: Record) {
