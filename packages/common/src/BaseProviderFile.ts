@@ -297,7 +297,7 @@ export class BaseProviderFile implements IProvider {
 
   private async getRecordsWithBranchCache() {
     const cacheKey = `tree.${this.ref}.${this.path}`;
-    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
+    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}.${this.path}`;
     const lastBranchCommitId = await this.cacheProvider.get(
       cacheKeyBranchCommitId,
     );
