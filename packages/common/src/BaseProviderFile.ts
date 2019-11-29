@@ -63,6 +63,7 @@ export class BaseProviderFile implements IProvider {
       filterFn,
       cacheProvider,
       cacheBehavior,
+      patchError,
     }: ProviderFileOptions,
   ) {
     this.projectId = projectId;
@@ -73,6 +74,7 @@ export class BaseProviderFile implements IProvider {
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.cacheBehavior = cacheBehavior || "branch";
+    this.patchError = patchError || this.patchError;
   }
 
   public async getList(params: ListParams = {}) {
@@ -262,6 +264,10 @@ export class BaseProviderFile implements IProvider {
     });
   }
 
+  private patchError(err: any) {
+    throw err;
+  }
+
   private async withUpdateLock<T>(fn: () => Promise<T>): Promise<T> {
     this.lockUpdate = this.lockUpdate.then(fn);
     return this.lockUpdate;
@@ -296,77 +302,93 @@ export class BaseProviderFile implements IProvider {
   }
 
   private async getRecordsWithBranchCache() {
-    const cacheKey = `tree.${this.ref}.${this.path}`;
-    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}.${this.path}`;
-    const lastBranchCommitId = await this.cacheProvider.get(
-      cacheKeyBranchCommitId,
-    );
-    const branch = await this.api.branch(this.projectId, this.ref);
-    const cached =
-      branch &&
-      lastBranchCommitId === branch.commit.id &&
-      (await this.cacheProvider.get<Record[]>(cacheKey));
-    const [records] = cached
-      ? [cached]
-      : await Promise.all([
-          this.getRecords().then(v => v.records),
-          branch &&
-            (await this.cacheProvider.set(
-              cacheKeyBranchCommitId,
-              branch.commit.id,
-            )),
-        ]);
+    try {
+      const cacheKey = `tree.${this.ref}.${this.path}`;
+      const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}.${this.path}`;
+      const lastBranchCommitId = await this.cacheProvider.get(
+        cacheKeyBranchCommitId,
+      );
+      const branch = await this.api.branch(this.projectId, this.ref);
+      const cached =
+        branch &&
+        lastBranchCommitId === branch.commit.id &&
+        (await this.cacheProvider.get<Record[]>(cacheKey));
+      const [records] = cached
+        ? [cached]
+        : await Promise.all([
+            this.getRecords().then(v => v.records),
+            branch &&
+              (await this.cacheProvider.set(
+                cacheKeyBranchCommitId,
+                branch.commit.id,
+              )),
+          ]);
 
-    if (!records) {
-      return [];
+      if (!records) {
+        return [];
+      }
+
+      if (!cached) {
+        await this.cacheProvider.set(cacheKey, records);
+      }
+
+      return records;
+    } catch (err) {
+      throw this.patchError(err);
     }
-
-    if (!cached) {
-      await this.cacheProvider.set(cacheKey, records);
-    }
-
-    return records;
   }
 
   private async getRecordsWithContentShaCache() {
-    const cacheKey = `tree.${this.ref}.${this.path}`;
-    const cacheKeyContentSha = `contentSha.${this.ref}.${this.path}`;
-    const lastContentSha = await this.cacheProvider.get(cacheKeyContentSha);
-    const fileInfo = await this.api.getFileInfo(
-      this.projectId,
-      this.ref,
-      this.path,
-    );
-    const cached =
-      fileInfo &&
-      lastContentSha === fileInfo.contentSha &&
-      (await this.cacheProvider.get<Record[]>(cacheKey));
-    const [records] = cached
-      ? [cached]
-      : await Promise.all([
-          this.getRecords().then(v => v.records),
-          fileInfo &&
-            (await this.cacheProvider.set(
-              cacheKeyContentSha,
-              fileInfo.contentSha,
-            )),
-        ]);
+    try {
+      const cacheKey = `tree.${this.ref}.${this.path}`;
+      const cacheKeyContentSha = `contentSha.${this.ref}.${this.path}`;
+      const lastContentSha = await this.cacheProvider.get(cacheKeyContentSha);
+      const fileInfo = await this.api.getFileInfo(
+        this.projectId,
+        this.ref,
+        this.path,
+      );
+      const cached =
+        fileInfo &&
+        lastContentSha === fileInfo.contentSha &&
+        (await this.cacheProvider.get<Record[]>(cacheKey));
+      const [records] = cached
+        ? [cached]
+        : await Promise.all([
+            this.getRecords().then(v => v.records),
+            fileInfo &&
+              (await this.cacheProvider.set(
+                cacheKeyContentSha,
+                fileInfo.contentSha,
+              )),
+          ]);
 
-    if (!records) {
-      return [];
+      if (!records) {
+        return [];
+      }
+
+      if (!cached) {
+        await this.cacheProvider.set(cacheKey, records);
+      }
+
+      return records;
+    } catch (err) {
+      throw this.patchError(err);
     }
-
-    if (!cached) {
-      await this.cacheProvider.set(cacheKey, records);
-    }
-
-    return records;
   }
 
   private async getRecords() {
-    const file = await this.api.getRawFile(this.projectId, this.ref, this.path);
-    const records: Record[] = file ? this.serializer.parse(file) : [];
-    return { records, exists: !!file };
+    try {
+      const file = await this.api.getRawFile(
+        this.projectId,
+        this.ref,
+        this.path,
+      );
+      const records: Record[] = file ? this.serializer.parse(file) : [];
+      return { records, exists: !!file };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   private async updateRecords(
@@ -374,12 +396,16 @@ export class BaseProviderFile implements IProvider {
     message: string,
     records: Record[],
   ) {
-    await this.api.commit(this.projectId, this.ref, message, [
-      {
-        action: exists ? "update" : "create",
-        content: this.serializer.stringify(records),
-        filePath: this.path,
-      },
-    ]);
+    try {
+      await this.api.commit(this.projectId, this.ref, message, [
+        {
+          action: exists ? "update" : "create",
+          content: this.serializer.stringify(records),
+          filePath: this.path,
+        },
+      ]);
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 }

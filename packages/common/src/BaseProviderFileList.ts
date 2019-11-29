@@ -63,6 +63,7 @@ export class BaseProviderFileList implements IProvider {
       serializer,
       filterFn,
       cacheProvider,
+      patchError,
     }: ProviderFileListOptions,
   ) {
     if (basePath) {
@@ -75,83 +76,96 @@ export class BaseProviderFileList implements IProvider {
     this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
+    this.patchError = patchError || this.patchError;
   }
 
   public async getList(params: ListParams = {}) {
-    const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
-    const cacheKey = `tree.${this.ref}.${this.basePath}`;
-    const lastBranchCommitId = await this.cacheProvider.get(
-      cacheKeyBranchCommitId,
-    );
-    const branch = await this.api.branch(this.projectId, this.ref);
-    const cached =
-      branch &&
-      lastBranchCommitId === branch.commit.id &&
-      (await this.cacheProvider.get<BaseProviderAPITreeFile[]>(cacheKey));
-    const [tree] = cached
-      ? [cached]
-      : await Promise.all([
-          this.api.tree(this.projectId, this.ref, this.basePath),
-          branch &&
-            (await this.cacheProvider.set(
-              cacheKeyBranchCommitId,
-              branch.commit.id,
-            )),
-        ]);
+    try {
+      const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
+      const cacheKey = `tree.${this.ref}.${this.basePath}`;
+      const lastBranchCommitId = await this.cacheProvider.get(
+        cacheKeyBranchCommitId,
+      );
+      const branch = await this.api.branch(this.projectId, this.ref);
+      const cached =
+        branch &&
+        lastBranchCommitId === branch.commit.id &&
+        (await this.cacheProvider.get<BaseProviderAPITreeFile[]>(cacheKey));
+      const [tree] = cached
+        ? [cached]
+        : await Promise.all([
+            this.api.tree(this.projectId, this.ref, this.basePath),
+            branch &&
+              (await this.cacheProvider.set(
+                cacheKeyBranchCommitId,
+                branch.commit.id,
+              )),
+          ]);
 
-    if (!cached) {
-      await this.cacheProvider.set(cacheKey, tree);
-    }
+      if (!cached) {
+        await this.cacheProvider.set(cacheKey, tree);
+      }
 
-    const limit = pLimit(5);
-    const files = await Promise.all(
-      tree.map(async treeFile =>
-        cacheStoreGetOrSet(
-          this.cacheProvider,
-          treeFile.path,
-          () =>
-            limit(() =>
-              this.api.showFile(this.projectId, this.ref, treeFile.path),
-            ),
-          (c: { blobId?: string }) => c.blobId === treeFile.id,
+      const limit = pLimit(5);
+      const files = await Promise.all(
+        tree.map(async treeFile =>
+          cacheStoreGetOrSet(
+            this.cacheProvider,
+            treeFile.path,
+            () =>
+              limit(() =>
+                this.api.showFile(this.projectId, this.ref, treeFile.path),
+              ),
+            (c: { blobId?: string }) => c.blobId === treeFile.id,
+          ),
         ),
-      ),
-    );
+      );
 
-    const sorted = sortRecords(files.map(this.parseEntity), params);
-    const filtered = params.filter
-      ? this.filterRecords(sorted, params.filter)
-      : sorted;
-    const paginated = paginateRecords(filtered, params);
+      const sorted = sortRecords(files.map(this.parseEntity), params);
+      const filtered = params.filter
+        ? this.filterRecords(sorted, params.filter)
+        : sorted;
+      const paginated = paginateRecords(filtered, params);
 
-    return {
-      data: paginated,
-      total: tree.length,
-    };
+      return {
+        data: paginated,
+        total: tree.length,
+      };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   public async getOne(params: GetOneParams) {
-    const data = await this.api.showFile(
-      this.projectId,
-      this.ref,
-      this.getFilePath(params.id),
-    );
-    return {
-      data: data && this.parseEntity(data),
-    };
+    try {
+      const data = await this.api.showFile(
+        this.projectId,
+        this.ref,
+        this.getFilePath(params.id),
+      );
+      return {
+        data: data && this.parseEntity(data),
+      };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   public async getMany(params: GetManyParams) {
-    const manyFiles = await Promise.all(
-      params.ids.map(id =>
-        this.api.showFile(this.projectId, this.ref, this.getFilePath(id)),
-      ),
-    );
-    return {
-      data: manyFiles
-        .map(data => data && this.parseEntity(data))
-        .filter(<T>(n?: T): n is T => Boolean(n)),
-    };
+    try {
+      const manyFiles = await Promise.all(
+        params.ids.map(id =>
+          this.api.showFile(this.projectId, this.ref, this.getFilePath(id)),
+        ),
+      );
+      return {
+        data: manyFiles
+          .map(data => data && this.parseEntity(data))
+          .filter(<T>(n?: T): n is T => Boolean(n)),
+      };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   public async getManyReference(params: GetManyReferenceParams) {
@@ -165,100 +179,126 @@ export class BaseProviderFileList implements IProvider {
   }
 
   public async create(params: CreateParams) {
-    const data = this.createEntity(params.data);
-    const filePath = this.getFilePath(data.id);
+    try {
+      const data = this.createEntity(params.data);
+      const filePath = this.getFilePath(data.id);
 
-    await this.api.commit(this.projectId, this.ref, `Create ${filePath}`, [
-      {
-        action: "create",
-        content: this.stringifyEntity(data),
-        filePath,
-      },
-    ]);
-    return { data };
+      await this.api.commit(this.projectId, this.ref, `Create ${filePath}`, [
+        {
+          action: "create",
+          content: this.stringifyEntity(data),
+          filePath,
+        },
+      ]);
+      return { data };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   // TODO: check if data are equals, so skip commit
   public async update(params: UpdateParams) {
-    const filePath = this.getFilePath(params.id);
-    const content = this.stringifyEntity(params.data as Record);
-    const previousContent = this.stringifyEntity(params.previousData as Record);
-    if (content !== previousContent) {
-      await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
-        {
-          action: "update",
-          content,
-          filePath: this.getFilePath(params.id),
+    try {
+      const filePath = this.getFilePath(params.id);
+      const content = this.stringifyEntity(params.data as Record);
+      const previousContent = this.stringifyEntity(
+        params.previousData as Record,
+      );
+      if (content !== previousContent) {
+        await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
+          {
+            action: "update",
+            content,
+            filePath: this.getFilePath(params.id),
+          },
+        ]);
+      }
+      return {
+        data: {
+          id: params.id,
+          ...params.data,
         },
-      ]);
+      };
+    } catch (err) {
+      throw this.patchError(err);
     }
-    return {
-      data: {
-        id: params.id,
-        ...params.data,
-      },
-    };
   }
 
   public async updateMany(params: UpdateManyParams) {
-    const entities = (await Promise.all(
-      params.ids.map(
-        async id =>
-          (await this.getOne({
-            id,
-          })).data,
-      ),
-    )).filter(<T>(n?: T): n is T => Boolean(n));
+    try {
+      const entities = (await Promise.all(
+        params.ids.map(
+          async id =>
+            (await this.getOne({
+              id,
+            })).data,
+        ),
+      )).filter(<T>(n?: T): n is T => Boolean(n));
 
-    const newEntities = entities.map(entity => ({
-      ...entity,
-      ...params.data,
-    }));
+      const newEntities = entities.map(entity => ({
+        ...entity,
+        ...params.data,
+      }));
 
-    await this.api.commit(
-      this.projectId,
-      this.ref,
-      `Update many in ${this.basePath}`,
-      newEntities.map(entity => ({
-        action: "update" as "update",
-        content: this.stringifyEntity(entity),
-        filePath: this.getFilePath(entity.id),
-      })),
-    );
+      await this.api.commit(
+        this.projectId,
+        this.ref,
+        `Update many in ${this.basePath}`,
+        newEntities.map(entity => ({
+          action: "update" as "update",
+          content: this.stringifyEntity(entity),
+          filePath: this.getFilePath(entity.id),
+        })),
+      );
 
-    return {
-      data: newEntities,
-    };
+      return {
+        data: newEntities,
+      };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   public async delete(params: DeleteParams) {
-    const filePath = this.getFilePath(params.id);
-    await this.api.commit(this.projectId, this.ref, `Delete ${filePath}`, [
-      {
-        action: "delete",
-        filePath,
-      },
-    ]);
-    return {
-      data: {
-        id: params.id,
-        ...params.previousData,
-      },
-    };
+    try {
+      const filePath = this.getFilePath(params.id);
+      await this.api.commit(this.projectId, this.ref, `Delete ${filePath}`, [
+        {
+          action: "delete",
+          filePath,
+        },
+      ]);
+      return {
+        data: {
+          id: params.id,
+          ...params.previousData,
+        },
+      };
+    } catch (err) {
+      throw this.patchError(err);
+    }
   }
 
   public async deleteMany(params: DeleteManyParams) {
-    const actions = params.ids.map(id => ({
-      action: "delete" as "delete",
-      filePath: this.getFilePath(id),
-    }));
-    await this.api.commit(
-      this.projectId,
-      this.ref,
-      `Delete many in ${this.basePath}`,
-      actions,
-    );
-    return { data: params.ids };
+    try {
+      const actions = params.ids.map(id => ({
+        action: "delete" as "delete",
+        filePath: this.getFilePath(id),
+      }));
+      await this.api.commit(
+        this.projectId,
+        this.ref,
+        `Delete many in ${this.basePath}`,
+        actions,
+      );
+      return { data: params.ids };
+    } catch (err) {
+      throw this.patchError(err);
+    }
+  }
+
+  private patchError(err: any) {
+    throw err;
   }
 
   private createEntity = (data: object): Record => ({

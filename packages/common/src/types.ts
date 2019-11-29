@@ -79,6 +79,7 @@ export interface ProviderOptions {
   basePath?: string;
   path: string;
   cacheProvider?: CacheProvider;
+  patchError?: (err: any) => any;
 }
 
 export declare class IProvider {
