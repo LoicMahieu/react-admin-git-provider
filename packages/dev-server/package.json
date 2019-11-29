@@ -31,7 +31,7 @@
     "@types/express": "^4.17.2",
     "@types/fs-extra": "^8.0.1",
     "@types/hasha": "^3.0.1",
-    "tslint": "^5.20.0",
-    "typescript": "^3.6.4"
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
   }
 }
