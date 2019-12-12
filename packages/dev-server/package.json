@@ -2,16 +2,18 @@
   "name": "@react-admin-git-provider/dev-server",
   "version": "0.4.0",
   "files": [
-    "lib/*"
+    "dist"
   ],
-  "main": "./lib/index.js",
-  "typings": "./lib/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/dev-server.esm.js",
+  "typings": "dist/index.d.ts",
   "author": "Loïc Mahieu <mahieuloic@gmail.com>",
   "license": "MIT",
   "scripts": {
     "test": "npm run build",
-    "build": "rm -rf lib/* && tsc",
-    "watch": "yarn build && tsc -w",
+    "build": "tsdx build",
+    "start": "tsdx watch",
+    "watch": "tsdx watch",
     "prepare": "yarn build"
   },
   "publishConfig": {
@@ -32,6 +34,7 @@
     "@types/fs-extra": "^8.0.1",
     "@types/hasha": "^3.0.1",
     "tslint": "^5.20.1",
+    "tsdx": "^0.11.0",
     "typescript": "^3.7.2"
   }
 }

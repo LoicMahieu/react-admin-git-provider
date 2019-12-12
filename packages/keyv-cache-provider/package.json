@@ -2,16 +2,18 @@
   "name": "@react-admin-git-provider/keyv-cache-provider",
   "version": "0.4.0",
   "files": [
-    "lib/*"
+    "dist"
   ],
-  "main": "./lib/index.js",
-  "typings": "./lib/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/keyv-cache-provider.esm.js",
+  "typings": "dist/index.d.ts",
   "author": "Loïc Mahieu <mahieuloic@gmail.com>",
   "license": "MIT",
   "scripts": {
     "test": "npm run build",
-    "build": "rm -rf lib/* && tsc",
-    "start": "tsc -w",
+    "build": "tsdx build",
+    "start": "tsdx watch",
+    "watch": "tsdx watch",
     "prepare": "yarn build"
   },
   "publishConfig": {
@@ -28,6 +30,7 @@
     "@types/keyv": "^3.1.0",
     "jest": "^24.9.0",
     "ts-jest": "^24.2.0",
+    "tsdx": "^0.11.0",
     "typescript": "^3.7.2"
   }
 }
