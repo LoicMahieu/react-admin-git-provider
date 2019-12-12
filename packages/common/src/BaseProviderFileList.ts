@@ -91,16 +91,13 @@ export class BaseProviderFileList implements IProvider {
         branch &&
         lastBranchCommitId === branch.commit.id &&
         (await this.cacheProvider.get<BaseProviderAPITreeFile[]>(cacheKey));
-      const [tree] = cached
-        ? [cached]
+      const tree = cached
+        ? cached
         : await Promise.all([
             this.api.tree(this.projectId, this.ref, this.basePath),
             branch &&
-              (await this.cacheProvider.set(
-                cacheKeyBranchCommitId,
-                branch.commit.id,
-              )),
-          ]);
+              this.cacheProvider.set(cacheKeyBranchCommitId, branch.commit.id),
+          ]).then(v => v[0]);
 
       if (!cached) {
         await this.cacheProvider.set(cacheKey, tree);
@@ -226,14 +223,18 @@ export class BaseProviderFileList implements IProvider {
 
   public async updateMany(params: UpdateManyParams) {
     try {
-      const entities = (await Promise.all(
-        params.ids.map(
-          async id =>
-            (await this.getOne({
-              id,
-            })).data,
-        ),
-      )).filter(<T>(n?: T): n is T => Boolean(n));
+      const entities = (
+        await Promise.all(
+          params.ids.map(
+            async id =>
+              (
+                await this.getOne({
+                  id,
+                })
+              ).data,
+          ),
+        )
+      ).filter(<T>(n?: T): n is T => Boolean(n));
 
       const newEntities = entities.map(entity => ({
         ...entity,

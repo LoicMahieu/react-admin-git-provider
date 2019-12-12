@@ -93,11 +93,13 @@ export class BaseProviderFile implements IProvider {
 
   public async getOne(params: GetOneParams) {
     return {
-      data: (await this.getList({
-        filter: {
-          id: params.id,
-        },
-      })).data[0],
+      data: (
+        await this.getList({
+          filter: {
+            id: params.id,
+          },
+        })
+      ).data[0],
     };
   }
 
@@ -313,16 +315,13 @@ export class BaseProviderFile implements IProvider {
         branch &&
         lastBranchCommitId === branch.commit.id &&
         (await this.cacheProvider.get<Record[]>(cacheKey));
-      const [records] = cached
-        ? [cached]
+      const records = cached
+        ? cached
         : await Promise.all([
             this.getRecords().then(v => v.records),
             branch &&
-              (await this.cacheProvider.set(
-                cacheKeyBranchCommitId,
-                branch.commit.id,
-              )),
-          ]);
+              this.cacheProvider.set(cacheKeyBranchCommitId, branch.commit.id),
+          ]).then(v => v[0]);
 
       if (!records) {
         return [];
@@ -352,16 +351,13 @@ export class BaseProviderFile implements IProvider {
         fileInfo &&
         lastContentSha === fileInfo.contentSha &&
         (await this.cacheProvider.get<Record[]>(cacheKey));
-      const [records] = cached
-        ? [cached]
+      const records = cached
+        ? cached
         : await Promise.all([
             this.getRecords().then(v => v.records),
             fileInfo &&
-              (await this.cacheProvider.set(
-                cacheKeyContentSha,
-                fileInfo.contentSha,
-              )),
-          ]);
+              this.cacheProvider.set(cacheKeyContentSha, fileInfo.contentSha),
+          ]).then(v => v[0]);
 
       if (!records) {
         return [];
