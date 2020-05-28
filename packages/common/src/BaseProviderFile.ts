@@ -296,9 +296,13 @@ export class BaseProviderFile implements IProvider {
 
     this.getRecordsPromise = getRecordsPromise;
 
-    const records = await getRecordsPromise;
+    let records: Record[] = [];
 
-    this.getRecordsPromise = undefined;
+    try {
+      records = await getRecordsPromise;
+    } finally {
+      this.getRecordsPromise = undefined;
+    }
 
     return records;
   }

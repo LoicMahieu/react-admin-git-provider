@@ -74,14 +74,14 @@ export function getGitlabHeaders({
 
 export class GitlabProviderAPI extends BaseProviderAPI {
   private readonly url: string;
-  private readonly headers: { [header: string]: string };
   private readonly timeout?: number;
   private readonly treePerPage: number = 10;
+  private readonly options: GitlabOptions;
 
   constructor(options: GitlabOptions) {
     super();
+    this.options = options;
     this.url = getGitlabUrl(options);
-    this.headers = getGitlabHeaders(options);
     this.timeout = options.timeout || defaultOptions.timeout;
   }
 
@@ -121,7 +121,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
             ref,
           }),
         {
-          headers: this.headers,
+          headers: getGitlabHeaders(this.options),
           timeout: this.timeout,
         },
       );
@@ -154,7 +154,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
             ref,
           }),
         {
-          headers: this.headers,
+          headers: getGitlabHeaders(this.options),
           timeout: this.timeout,
         },
       );
@@ -186,7 +186,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
             ref,
           }),
         {
-          headers: this.headers,
+          headers: getGitlabHeaders(this.options),
           timeout: this.timeout,
         },
       );
@@ -220,7 +220,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         encodeURIComponent(projectId) +
         "/repository/commits",
       {
-        headers: this.headers,
+        headers: getGitlabHeaders(this.options),
         json: commitBody,
         timeout: this.timeout,
       },
@@ -236,7 +236,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
         "/repository/branches/" +
         encodeURIComponent(ref),
       {
-        headers: this.headers,
+        headers: getGitlabHeaders(this.options),
         timeout: this.timeout,
       },
     );
@@ -263,7 +263,7 @@ export class GitlabProviderAPI extends BaseProviderAPI {
           ref,
         }),
       {
-        headers: this.headers,
+        headers: getGitlabHeaders(this.options),
         timeout: this.timeout,
       },
     );
