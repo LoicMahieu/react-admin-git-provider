@@ -21,7 +21,7 @@ export function filterItems(items: any[], filter: Filter) {
       if (key === "q") {
         const regex = new RegExp(filter.q || "", "i");
         // full-text filter
-        return (item: any) => {
+        const filterItem = (item: any): boolean => {
           for (const itemKey in item) {
             if (
               item[itemKey] &&
@@ -29,10 +29,14 @@ export function filterItems(items: any[], filter: Filter) {
               item[itemKey].match(regex) !== null
             ) {
               return true;
+            } else if (typeof item[itemKey] === "object") {
+              return filterItem(item[itemKey])
             }
+            return false
           }
           return false;
-        };
+        }
+        return filterItem;
       }
       const value = filter[key as keyof Filter];
       if (key.indexOf("_lte") !== -1) {
