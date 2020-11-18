@@ -126,7 +126,7 @@ export class BaseProviderFileList implements IProvider {
 
       return {
         data: paginated,
-        total: tree.length,
+        total: filtered.length,
       };
     } catch (err) {
       throw this.patchError(err);

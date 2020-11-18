@@ -29,10 +29,9 @@ export function filterItems(items: any[], filter: Filter) {
               item[itemKey].match(regex) !== null
             ) {
               return true;
-            } else if (typeof item[itemKey] === "object") {
-              return filterItem(item[itemKey])
+            } else if (typeof item[itemKey] === "object" && filterItem(item[itemKey])) {
+              return true
             }
-            return false
           }
           return false;
         }

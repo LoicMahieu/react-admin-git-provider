@@ -87,7 +87,7 @@ export class BaseProviderFile implements IProvider {
 
     return {
       data: paginated,
-      total: records.length,
+      total: filtered.length,
     };
   }
 
