@@ -42,6 +42,7 @@ export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
+  fileExtension?: string;
 }
 
 export class BaseProviderFileList implements IProvider {
@@ -52,6 +53,7 @@ export class BaseProviderFileList implements IProvider {
   private readonly serializer: AnyEntitySerializer;
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
+  private readonly fileExtension: string;
 
   constructor(
     api: BaseProviderAPI,
@@ -64,6 +66,7 @@ export class BaseProviderFileList implements IProvider {
       filterFn,
       cacheProvider,
       patchError,
+      fileExtension,
     }: ProviderFileListOptions,
   ) {
     if (basePath) {
@@ -77,6 +80,7 @@ export class BaseProviderFileList implements IProvider {
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.patchError = patchError || this.patchError;
+    this.fileExtension = fileExtension || "json";
   }
 
   public async getList(params: ListParams = {}) {
@@ -319,10 +323,10 @@ export class BaseProviderFileList implements IProvider {
 
   private stringifyEntity = (entity: Record) => {
     const { id, ...data } = entity;
-    return JSON.stringify(data, null, 2);
+    return this.serializer.stringify(data);
   };
 
   private getFilePath = (entityId: string | number) => {
-    return this.basePath + "/" + entityId + ".json";
+    return this.basePath + "/" + entityId + "." + this.fileExtension;
   };
 }
