@@ -1,7 +1,6 @@
 import depd from "depd";
-import uuid from "nanoid";
 import pLimit from "p-limit";
-import { basename, extname } from "path";
+import { BaseProviderAPICommitAction } from ".";
 import {
   BaseProviderAPI,
   BaseProviderAPIFile,
@@ -10,11 +9,6 @@ import {
 import { cacheStoreGetOrSet } from "./cache";
 import { CacheProvider } from "./cacheProviders/CacheProvider";
 import { DisabledCacheProvider } from "./cacheProviders/DisabledCacheProvider";
-import {
-  AnyEntitySerializer,
-  ISerializers,
-  serializers,
-} from "./entitySerializers";
 import {
   CreateParams,
   DeleteManyParams,
@@ -38,22 +32,50 @@ import {
 
 const deprecate = depd("react-admin-git-provider");
 
-export interface ProviderFileListOptions extends ProviderOptions {
-  serializer: keyof ISerializers;
+type ProviderRawFileList_ListParams = ListParams & {
+  loadData?: boolean;
+};
+
+type ProviderRawFileList_CreateParams = CreateParams & {
+  data: {
+    data: {
+      rawFile: File;
+      src: string;
+      title: string;
+    };
+  };
+};
+
+type ProviderRawFileList_UpdateParams = UpdateParams & {
+  data: {
+    path: string;
+    data?: {
+      rawFile?: File;
+      src: string;
+      title: string;
+    };
+  };
+};
+
+type ProviderRawFileList_Record = Record & {
+  path: string;
+  data?: {
+    src: string;
+  };
+};
+
+export interface ProviderRawFileListOptions extends ProviderOptions {
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
-  fileExtension?: string;
 }
 
-export class BaseProviderFileList implements IProvider {
+export class BaseProviderRawFileList implements IProvider {
   private readonly api: BaseProviderAPI;
   private readonly projectId: string;
   private readonly ref: string;
   private readonly basePath: string;
-  private readonly serializer: AnyEntitySerializer;
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
-  private readonly fileExtension: string;
 
   constructor(
     api: BaseProviderAPI,
@@ -62,12 +84,10 @@ export class BaseProviderFileList implements IProvider {
       ref,
       basePath,
       path,
-      serializer,
       filterFn,
       cacheProvider,
       patchError,
-      fileExtension,
-    }: ProviderFileListOptions,
+    }: ProviderRawFileListOptions,
   ) {
     if (basePath) {
       deprecate("Option `basePath` is deprecated. Use `path` instead.");
@@ -76,14 +96,12 @@ export class BaseProviderFileList implements IProvider {
     this.ref = ref;
     this.basePath = path || basePath || "/";
     this.api = api;
-    this.serializer = new serializers[serializer || "json"]();
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.patchError = patchError || this.patchError;
-    this.fileExtension = fileExtension || "json";
   }
 
-  public async getList(params: ListParams = {}) {
+  public async getList(params: ProviderRawFileList_ListParams = {}) {
     try {
       const cacheKeyBranchCommitId = `lastBranchCommitId.${this.ref}`;
       const cacheKey = `tree.${this.ref}.${this.basePath}`;
@@ -108,19 +126,21 @@ export class BaseProviderFileList implements IProvider {
       }
 
       const limit = pLimit(5);
-      const files = await Promise.all(
-        tree.map(async treeFile =>
-          cacheStoreGetOrSet(
-            this.cacheProvider,
-            treeFile.path,
-            () =>
-              limit(() =>
-                this.api.showFile(this.projectId, this.ref, treeFile.path),
+      const files = params.loadData
+        ? await Promise.all(
+            tree.map(async treeFile =>
+              cacheStoreGetOrSet(
+                this.cacheProvider,
+                treeFile.path,
+                () =>
+                  limit(() =>
+                    this.api.showFile(this.projectId, this.ref, treeFile.path),
+                  ),
+                (c: { blobId?: string }) => c.blobId === treeFile.id,
               ),
-            (c: { blobId?: string }) => c.blobId === treeFile.id,
-          ),
-        ),
-      );
+            ),
+          )
+        : tree.map(this.parseEntity);
 
       const sorted = sortRecords(files.map(this.parseEntity), params);
       const filtered = params.filter
@@ -179,45 +199,76 @@ export class BaseProviderFileList implements IProvider {
     });
   }
 
-  public async create(params: CreateParams) {
+  public async create(params: ProviderRawFileList_CreateParams) {
     try {
-      const data = this.createEntity(params.data);
-      const filePath = this.getFilePath(data.id);
+      const data = await readFileAsBase64(params.data.data.rawFile);
+      if (!data) {
+        throw new Error("Could not read file");
+      }
+      const fileName = params.data.data.rawFile.name;
+      const filePath = this.getFilePath(fileName);
 
       await this.api.commit(this.projectId, this.ref, `Create ${filePath}`, [
         {
           action: "create",
-          content: this.stringifyEntity(data),
+          content: data,
+          encoding: "base64",
           filePath,
         },
       ]);
-      return { data };
+      return {
+        data: {
+          id: fileName,
+        },
+      };
     } catch (err) {
       throw this.patchError(err);
     }
   }
 
   // TODO: check if data are equals, so skip commit
-  public async update(params: UpdateParams) {
+  public async update(params: ProviderRawFileList_UpdateParams) {
     try {
-      const filePath = this.getFilePath(params.id);
-      const content = this.stringifyEntity(params.data as Record);
-      const previousContent = this.stringifyEntity(
-        params.previousData as Record,
-      );
-      if (content !== previousContent) {
-        await this.api.commit(this.projectId, this.ref, `Update ${filePath}`, [
-          {
-            action: "update",
-            content,
-            filePath: this.getFilePath(params.id),
-          },
-        ]);
+      const id = params.data.path;
+      const filePath = this.getFilePath(params.data.path);
+      const previousPath = this.getFilePath(params.id);
+
+      const shouldMove = filePath !== previousPath;
+      const content =
+        params.data.data &&
+        params.data.data.rawFile &&
+        (await readFileAsBase64(params.data.data.rawFile));
+
+      const message =
+        content && !shouldMove
+          ? `Update ${filePath}`
+          : content && shouldMove
+          ? `Delete ${previousPath} and create ${filePath}`
+          : `Move ${previousPath} to ${filePath}`;
+
+      let actions: BaseProviderAPICommitAction[] = [];
+      if (shouldMove)
+        actions.push({
+          action: "move",
+          filePath,
+          previousPath,
+        });
+      if (content)
+        actions.push({
+          action: "update",
+          content,
+          encoding: "base64",
+          filePath,
+        });
+
+      if (actions.length) {
+        await this.api.commit(this.projectId, this.ref, message, actions);
       }
+
       return {
         data: {
-          id: params.id,
           ...params.data,
+          id,
         },
       };
     } catch (err) {
@@ -226,42 +277,10 @@ export class BaseProviderFileList implements IProvider {
   }
 
   public async updateMany(params: UpdateManyParams) {
-    try {
-      const entities = (
-        await Promise.all(
-          params.ids.map(
-            async id =>
-              (
-                await this.getOne({
-                  id,
-                })
-              ).data,
-          ),
-        )
-      ).filter(<T>(n?: T): n is T => Boolean(n));
-
-      const newEntities = entities.map(entity => ({
-        ...entity,
-        ...params.data,
-      }));
-
-      await this.api.commit(
-        this.projectId,
-        this.ref,
-        `Update many in ${this.basePath}`,
-        newEntities.map(entity => ({
-          action: "update" as "update",
-          content: this.stringifyEntity(entity),
-          filePath: this.getFilePath(entity.id),
-        })),
-      );
-
-      return {
-        data: newEntities,
-      };
-    } catch (err) {
-      throw this.patchError(err);
-    }
+    throw new Error("Not implemented");
+    return {
+      data: [],
+    };
   }
 
   public async delete(params: DeleteParams) {
@@ -306,27 +325,42 @@ export class BaseProviderFileList implements IProvider {
     throw err;
   }
 
-  private createEntity = (data: object): Record => ({
-    ...data,
-    id: uuid(),
-  });
-
-  private parseEntity = (file: BaseProviderAPIFile): Record => {
-    const content = this.serializer.parse(
-      Buffer.from(file.content, file.encoding).toString("utf8"),
-    );
-    return {
-      id: basename(file.filePath, extname(file.filePath)),
-      ...content,
-    };
+  private parseEntity = (
+    file: BaseProviderAPITreeFile | BaseProviderAPIFile,
+  ): ProviderRawFileList_Record => {
+    if ("id" in file) {
+      return {
+        id: file.path.replace(this.basePath + "/", ""),
+        path: file.path.replace(this.basePath + "/", ""),
+      };
+    } else {
+      return {
+        id: file.filePath.replace(this.basePath + "/", ""),
+        path: file.filePath.replace(this.basePath + "/", ""),
+        data: {
+          src: "data:image/jpeg;base64," + file.content,
+        },
+      };
+    }
   };
-
-  private stringifyEntity = (entity: Record) => {
-    const { id, ...data } = entity;
-    return this.serializer.stringify(data);
-  };
-
   private getFilePath = (entityId: string | number) => {
-    return this.basePath + "/" + entityId + "." + this.fileExtension;
+    return this.basePath + "/" + entityId;
   };
 }
+
+const readFileAsBase64 = (file: File) =>
+  new Promise<string | null>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const result =
+        reader.result && typeof reader.result === "string"
+          ? reader.result
+              .split(",")
+              .slice(-1)
+              .join("")
+          : null;
+      resolve(result);
+    });
+    reader.addEventListener("error", reject);
+    reader.readAsDataURL(file);
+  });

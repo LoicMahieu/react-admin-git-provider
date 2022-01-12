@@ -204,10 +204,10 @@ export class GitlabProviderAPI extends BaseProviderAPI {
     actions: BaseProviderAPICommitAction[],
   ) {
     const commitBody: GitlabCommitBody = {
-      actions: actions.map(({ action, filePath, content }) => ({
-        action,
-        content,
+      actions: actions.map(({ filePath, previousPath, ...rest }) => ({
         file_path: filePath,
+        previous_path: previousPath,
+        ...rest,
       })),
       branch: ref,
       commit_message: message,

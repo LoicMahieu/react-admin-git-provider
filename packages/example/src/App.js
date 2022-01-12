@@ -18,7 +18,8 @@ import {
   crudUpdateMany,
   ListGuesser,
   DateField,
-  ReferenceArrayField,
+  ImageInput,
+  ImageField,
 } from "react-admin";
 import { connect } from "react-redux";
 import { Button } from "@material-ui/core";
@@ -30,6 +31,7 @@ import {
   GitlabProviderFileList,
   GitlabProviderBranch,
   GitlabProviderCommit,
+  GitlabProviderRawFileList,
 } from "@react-admin-git-provider/gitlab";
 import { LocalforageCacheProvider } from "@react-admin-git-provider/common";
 
@@ -67,6 +69,12 @@ const dataProvider = createDataProvider(({ resource }) => {
       path: `data/${resource}.json`,
       cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab" }),
     });
+  if (resource === "files")
+    return new GitlabProviderRawFileList({
+      ...baseProviderOptions,
+      path: `data/${resource}`,
+      cacheProvider: new LocalforageCacheProvider({ storeName: "gitlab2" }),
+    });
   else
     return new GitlabProviderFileList({
       ...baseProviderOptions,
@@ -93,18 +101,17 @@ const UserBulkActionButtons = props => (
   </>
 );
 
-const UpdateManyButton = connect(
-  undefined,
-  { crudUpdateMany },
-)(({ basePath, crudUpdateMany, resource, selectedIds, data, label }) => (
-  <Button
-    onClick={() => {
-      crudUpdateMany(resource, selectedIds, data, basePath);
-    }}
-  >
-    {label}
-  </Button>
-));
+const UpdateManyButton = connect(undefined, { crudUpdateMany })(
+  ({ basePath, crudUpdateMany, resource, selectedIds, data, label }) => (
+    <Button
+      onClick={() => {
+        crudUpdateMany(resource, selectedIds, data, basePath);
+      }}
+    >
+      {label}
+    </Button>
+  ),
+);
 
 const UserList = props => (
   <List
@@ -216,6 +223,45 @@ export const CommitList = props => (
   </List>
 );
 
+const FileList = props => (
+  <List
+    {...props}
+    bulkActionButtons={<UserBulkActionButtons />}
+    filters={<UserFilter />}
+  >
+    <Datagrid rowClick="edit">
+      <TextField source="id" />
+      <TextField source="path" />
+      <EditButton />
+      <DeleteButton />
+    </Datagrid>
+  </List>
+);
+
+const FileEdit = props => (
+  <Edit {...props}>
+    <SimpleForm>
+      <TextInput source="id" />
+      <TextInput source="path" />
+      <ImageInput source="data" label="Image" accept="image/*">
+        <ImageField source="src" title="title" />
+      </ImageInput>
+    </SimpleForm>
+  </Edit>
+);
+
+const FileCreate = props => (
+  <Create {...props}>
+    <SimpleForm>
+      <TextInput source="id" />
+      <TextInput source="path" />
+      <ImageInput source="data" label="Image" accept="image/*">
+        <ImageField source="src" title="title" />
+      </ImageInput>
+    </SimpleForm>
+  </Create>
+);
+
 const App = () => (
   <Admin
     dataProvider={dataProvider}
@@ -244,6 +290,12 @@ const App = () => (
     <Resource name="pipelines" list={PipelineList} />
     <Resource name="branches" list={ListGuesser} />
     <Resource name="commits" list={CommitList} />
+    <Resource
+      name="files"
+      list={FileList}
+      edit={FileEdit}
+      create={FileCreate}
+    />
   </Admin>
 );
 
