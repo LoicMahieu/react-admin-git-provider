@@ -11,6 +11,10 @@ import {
   ProviderFileList as GitlabProviderFileList,
 } from "./ProviderFileList";
 import { ProviderPipeline as GitlabProviderPipeline } from "./ProviderPipeline";
+import {
+  ProviderRawFileList as GitlabProviderRawFileList,
+  GitlabProviderRawFileListOptions,
+} from "./ProviderRawFileList";
 
 export {
   gitlabAuth,
@@ -22,4 +26,6 @@ export {
   GitlabProviderFile,
   GitlabProviderFileOptions,
   GitlabProviderPipeline,
+  GitlabProviderRawFileList,
+  GitlabProviderRawFileListOptions,
 };
