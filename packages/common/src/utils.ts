@@ -11,7 +11,7 @@ type Filter =
 
 // Borrowed from https://github.com/marmelab/FakeRest/blob/8397d21b8c8e3a847f80a362dddb1da5cf5a0f5e/src/Collection.js#L5-L81
 
-export function filterItems(items: any[], filter: Filter) {
+export const defaultFilterRecords: FilterFn = function (items: any[], filter: Filter) {
   if (typeof filter === "function") {
     return items.filter(filter);
   }
@@ -108,9 +108,6 @@ export const sortRecords = (entities: Record[], params: ListParams): Record[] =>
     [params.sort.field],
     [params.sort.order.toLowerCase() as "asc" | "desc"],
   );
-};
-export const defaultFilterRecords: FilterFn = (entities, filter) => {
-  return filterItems(entities, filter);
 };
 export const paginateRecords = (entities: Record[], params: ListParams): Record[] => {
   if (

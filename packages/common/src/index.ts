@@ -6,3 +6,4 @@ export * from "./types";
 export * from "./cache";
 export * from "./cacheProviders";
 export * from "./authBridges";
+export { defaultFilterRecords } from "./utils";
