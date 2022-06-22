@@ -39,7 +39,7 @@ export interface ProviderFileOptions extends ProviderOptions {
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
   cacheBehavior?: "branch" | "contentSha";
-  transform?: (record: Record) => Record;
+  transform?: (record: Record) => Record | Promise<Record>;
 }
 
 export class BaseProviderFile implements IProvider {
@@ -125,7 +125,7 @@ export class BaseProviderFile implements IProvider {
 
   public async create(params: CreateParams) {
     return this.withUpdateLock<CreateOutput>(async () => {
-      const data = this.transform(this.createEntity(params.data));
+      const data = await this.transform(this.createEntity(params.data));
       const { records, exists } = await this.getRecords();
 
       records.push(data);
@@ -148,14 +148,16 @@ export class BaseProviderFile implements IProvider {
       let records = getRecords.records;
       let hasChange = false;
 
-      records = records.map(r => {
-        if (r.id === params.id) {
-          hasChange = this.recordHasChanged(r, data);
-          return this.transform(data);
-        } else {
-          return r;
-        }
-      });
+      records = await Promise.all(
+        records.map(r => {
+          if (r.id === params.id) {
+            hasChange = this.recordHasChanged(r, data);
+            return this.transform(data);
+          } else {
+            return r;
+          }
+        }),
+      );
 
       if (hasChange) {
         await this.updateRecords(
@@ -193,7 +195,7 @@ export class BaseProviderFile implements IProvider {
         if (params.ids.includes(`${r.id}`)) {
           return {
             ...r,
-            ... this.transform(data),
+            ...this.transform(data),
           };
         } else {
           return r;
@@ -282,7 +284,7 @@ export class BaseProviderFile implements IProvider {
     return !isEqual(previous, next);
   }
 
-  private transform = (data: Record): Record => data;
+  private transform = (data: Record): Record | Promise<Record> => data;
 
   private createEntity = (data: object): Record => ({
     ...data,

@@ -42,7 +42,7 @@ export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
-  transform?: (record: Record) => Record;
+  transform?: (record: Record) => Record | Promise<Record>;
 }
 
 export class BaseProviderFileList implements IProvider {
@@ -186,7 +186,7 @@ export class BaseProviderFileList implements IProvider {
       await this.api.commit(this.projectId, this.ref, `Create ${filePath}`, [
         {
           action: "create",
-          content: this.stringifyEntity(this.transform(data)),
+          content: this.stringifyEntity(await this.transform(data)),
           filePath,
         },
       ]);
@@ -200,7 +200,9 @@ export class BaseProviderFileList implements IProvider {
   public async update(params: UpdateParams) {
     try {
       const filePath = this.getFilePath(params.id);
-      const content = this.stringifyEntity(this.transform(params.data as Record));
+      const content = this.stringifyEntity(
+        await this.transform(params.data as Record),
+      );
       const previousContent = this.stringifyEntity(
         params.previousData as Record,
       );
@@ -248,11 +250,13 @@ export class BaseProviderFileList implements IProvider {
         this.projectId,
         this.ref,
         `Update many in ${this.basePath}`,
-        newEntities.map(entity => ({
-          action: "update" as "update",
-          content: this.stringifyEntity(this.transform(entity)),
-          filePath: this.getFilePath(entity.id),
-        })),
+        await Promise.all(
+          newEntities.map(async entity => ({
+            action: "update" as "update",
+            content: this.stringifyEntity(await this.transform(entity)),
+            filePath: this.getFilePath(entity.id),
+          })),
+        ),
       );
 
       return {
@@ -305,7 +309,7 @@ export class BaseProviderFileList implements IProvider {
     throw err;
   }
 
-  private transform = (data: Record): Record => data;
+  private transform = (data: Record): Record | Promise<Record> => data;
 
   private createEntity = (data: object): Record => ({
     ...data,
