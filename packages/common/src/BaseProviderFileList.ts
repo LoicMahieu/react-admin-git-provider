@@ -42,6 +42,7 @@ export interface ProviderFileListOptions extends ProviderOptions {
   serializer: keyof ISerializers;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
+  transform?: (record: Record) => Record;
 }
 
 export class BaseProviderFileList implements IProvider {
@@ -64,6 +65,7 @@ export class BaseProviderFileList implements IProvider {
       filterFn,
       cacheProvider,
       patchError,
+      transform,
     }: ProviderFileListOptions,
   ) {
     if (basePath) {
@@ -77,6 +79,7 @@ export class BaseProviderFileList implements IProvider {
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.patchError = patchError || this.patchError;
+    this.transform = transform || this.transform;
   }
 
   public async getList(params: ListParams = {}) {
@@ -183,7 +186,7 @@ export class BaseProviderFileList implements IProvider {
       await this.api.commit(this.projectId, this.ref, `Create ${filePath}`, [
         {
           action: "create",
-          content: this.stringifyEntity(data),
+          content: this.stringifyEntity(this.transform(data)),
           filePath,
         },
       ]);
@@ -197,7 +200,7 @@ export class BaseProviderFileList implements IProvider {
   public async update(params: UpdateParams) {
     try {
       const filePath = this.getFilePath(params.id);
-      const content = this.stringifyEntity(params.data as Record);
+      const content = this.stringifyEntity(this.transform(params.data as Record));
       const previousContent = this.stringifyEntity(
         params.previousData as Record,
       );
@@ -247,7 +250,7 @@ export class BaseProviderFileList implements IProvider {
         `Update many in ${this.basePath}`,
         newEntities.map(entity => ({
           action: "update" as "update",
-          content: this.stringifyEntity(entity),
+          content: this.stringifyEntity(this.transform(entity)),
           filePath: this.getFilePath(entity.id),
         })),
       );
@@ -301,6 +304,8 @@ export class BaseProviderFileList implements IProvider {
   private patchError(err: any) {
     throw err;
   }
+
+  private transform = (data: Record): Record => data;
 
   private createEntity = (data: object): Record => ({
     ...data,

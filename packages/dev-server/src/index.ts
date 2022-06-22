@@ -26,6 +26,10 @@ export async function applyMiddlewares(app: Application, options: IOptions) {
   const prefix = options.prefix || "";
 
   app.get(
+    `${prefix}/api/v4/projects/:projectId/repository/branches/:branch`,
+    branches(options),
+  );
+  app.get(
     `${prefix}/api/v4/projects/:projectId/repository/tree`,
     tree(options),
   );
@@ -81,6 +85,17 @@ async function doCommitAction(action: CommitAction, options: IOptions) {
     await fs.unlink(absFilePath);
   }
 }
+
+const branches = (options: IOptions) =>
+  asyncHandler(async (req, res, next) => {
+    const { branch } = req.params;
+    res.send({
+      name: branch,
+      commit: {
+        id: branch,
+      },
+    });
+  })
 
 const tree = (options: IOptions) =>
   asyncHandler(async (req, res, next) => {

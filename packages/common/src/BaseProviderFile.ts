@@ -39,6 +39,7 @@ export interface ProviderFileOptions extends ProviderOptions {
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
   cacheBehavior?: "branch" | "contentSha";
+  transform?: (record: Record) => Record;
 }
 
 export class BaseProviderFile implements IProvider {
@@ -64,6 +65,7 @@ export class BaseProviderFile implements IProvider {
       cacheProvider,
       cacheBehavior,
       patchError,
+      transform,
     }: ProviderFileOptions,
   ) {
     this.projectId = projectId;
@@ -75,6 +77,7 @@ export class BaseProviderFile implements IProvider {
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.cacheBehavior = cacheBehavior || "branch";
     this.patchError = patchError || this.patchError;
+    this.transform = transform || this.transform;
   }
 
   public async getList(params: ListParams = {}) {
@@ -122,7 +125,7 @@ export class BaseProviderFile implements IProvider {
 
   public async create(params: CreateParams) {
     return this.withUpdateLock<CreateOutput>(async () => {
-      const data = this.createEntity(params.data);
+      const data = this.transform(this.createEntity(params.data));
       const { records, exists } = await this.getRecords();
 
       records.push(data);
@@ -148,7 +151,7 @@ export class BaseProviderFile implements IProvider {
       records = records.map(r => {
         if (r.id === params.id) {
           hasChange = this.recordHasChanged(r, data);
-          return data;
+          return this.transform(data);
         } else {
           return r;
         }
@@ -190,7 +193,7 @@ export class BaseProviderFile implements IProvider {
         if (params.ids.includes(`${r.id}`)) {
           return {
             ...r,
-            ...data,
+            ... this.transform(data),
           };
         } else {
           return r;
@@ -278,6 +281,8 @@ export class BaseProviderFile implements IProvider {
   private recordHasChanged(previous: Record, next: Record) {
     return !isEqual(previous, next);
   }
+
+  private transform = (data: Record): Record => data;
 
   private createEntity = (data: object): Record => ({
     ...data,
