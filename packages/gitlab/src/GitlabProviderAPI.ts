@@ -7,6 +7,7 @@ import {
   LocalStorageAuthBridge,
 } from "@react-admin-git-provider/common";
 import Ky from "ky-universal";
+import { memoize } from "lodash";
 import flatten from "lodash/flatten";
 import querystring from "querystring";
 
@@ -72,6 +73,29 @@ export function getGitlabHeaders({
   };
 }
 
+// Hotfix to not fetch multiple time the branch
+const memoizePromiseDuringExec = (fn: (...args: any[]) => Promise<any>) => {
+  const cache = new Map();
+  return (...args: any[]) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const promise = fn(...args);
+    cache.set(key, promise);
+
+    promise
+      .then(() => {
+        cache.delete(key);
+      })
+      .catch(() => {
+        cache.delete(key);
+      });
+
+    return promise;
+  };
+};
+
 export class GitlabProviderAPI extends BaseProviderAPI {
   private readonly url: string;
   private readonly timeout?: number;
@@ -83,6 +107,12 @@ export class GitlabProviderAPI extends BaseProviderAPI {
     this.options = options;
     this.url = getGitlabUrl(options);
     this.timeout = options.timeout || defaultOptions.timeout;
+
+    this.tree = memoizePromiseDuringExec(this.tree.bind(this));
+    this.showFile = memoizePromiseDuringExec(this.showFile.bind(this));
+    this.getFileInfo = memoizePromiseDuringExec(this.getFileInfo.bind(this));
+    this.getRawFile = memoizePromiseDuringExec(this.getRawFile.bind(this));
+    this.branch = memoizePromiseDuringExec(this.branch.bind(this));
   }
 
   public async tree(projectId: string, ref: string, path: string) {
