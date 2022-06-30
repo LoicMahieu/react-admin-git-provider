@@ -5,8 +5,8 @@ import { CacheProvider } from "./cacheProviders/CacheProvider";
 import { DisabledCacheProvider } from "./cacheProviders/DisabledCacheProvider";
 import {
   AnyEntitySerializer,
-  ISerializers,
-  serializers,
+  createSerializer,
+  SerializerOption,
 } from "./entitySerializers";
 import {
   CreateOutput,
@@ -35,7 +35,7 @@ import {
 } from "./utils";
 
 export interface ProviderFileOptions extends ProviderOptions {
-  serializer: keyof ISerializers;
+  serializer: SerializerOption;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
   cacheBehavior?: "branch" | "contentSha";
@@ -72,7 +72,7 @@ export class BaseProviderFile implements IProvider {
     this.ref = ref;
     this.path = path || "/";
     this.api = api;
-    this.serializer = new serializers[serializer || "json"]();
+    this.serializer = createSerializer(serializer);
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.cacheBehavior = cacheBehavior || "branch";

@@ -2,10 +2,14 @@ import { JsonEntitySerializer } from "./json";
 
 export type AnyEntitySerializer = JsonEntitySerializer;
 
-export interface ISerializers {
-  json: typeof JsonEntitySerializer;
-}
+export type SerializerOption = "json" | ["json", { indent: number }];
 
-export const serializers = {
-  json: JsonEntitySerializer,
+export const createSerializer = (
+  option: SerializerOption,
+): AnyEntitySerializer => {
+  if (option === "json") {
+    return new JsonEntitySerializer();
+  }
+  return new JsonEntitySerializer(option[1]);
 };
+

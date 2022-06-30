@@ -12,8 +12,8 @@ import { CacheProvider } from "./cacheProviders/CacheProvider";
 import { DisabledCacheProvider } from "./cacheProviders/DisabledCacheProvider";
 import {
   AnyEntitySerializer,
-  ISerializers,
-  serializers,
+  createSerializer,
+  SerializerOption,
 } from "./entitySerializers";
 import {
   CreateParams,
@@ -39,7 +39,7 @@ import {
 const deprecate = depd("react-admin-git-provider");
 
 export interface ProviderFileListOptions extends ProviderOptions {
-  serializer: keyof ISerializers;
+  serializer: SerializerOption;
   filterFn?: FilterFn;
   cacheProvider?: CacheProvider;
   transform?: (record: Record) => Record | Promise<Record>;
@@ -75,7 +75,7 @@ export class BaseProviderFileList implements IProvider {
     this.ref = ref;
     this.basePath = path || basePath || "/";
     this.api = api;
-    this.serializer = new serializers[serializer || "json"]();
+    this.serializer = createSerializer(serializer);
     this.filterRecords = filterFn || defaultFilterRecords;
     this.cacheProvider = cacheProvider || new DisabledCacheProvider();
     this.patchError = patchError || this.patchError;
