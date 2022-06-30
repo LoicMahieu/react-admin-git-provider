@@ -5,11 +5,21 @@ import {
 import { GitlabOptions, GitlabProviderAPI } from "./GitlabProviderAPI";
 
 export interface GitlabProviderFileListOptions extends ProviderFileListOptions {
-  gitlabOptions: GitlabOptions;
+  gitlabOptions?: GitlabOptions;
+  gitlabProviderAPI?: GitlabProviderAPI;
 }
 
 export class ProviderFileList extends BaseProviderFileList {
-  constructor({ gitlabOptions, ...options }: GitlabProviderFileListOptions) {
-    super(new GitlabProviderAPI(gitlabOptions), options);
+  constructor({
+    gitlabOptions,
+    gitlabProviderAPI,
+    ...options
+  }: GitlabProviderFileListOptions) {
+    super(
+      gitlabProviderAPI
+        ? gitlabProviderAPI
+        : new GitlabProviderAPI(gitlabOptions || {}),
+      options,
+    );
   }
 }

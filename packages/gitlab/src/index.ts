@@ -1,5 +1,6 @@
 import { createDataProvider } from "@react-admin-git-provider/common";
 import * as gitlabAuth from "./authProvider";
+import { GitlabProviderAPI } from "./GitlabProviderAPI";
 import { ProviderBranch as GitlabProviderBranch } from "./ProviderBranch";
 import { ProviderCommit as GitlabProviderCommit } from "./ProviderCommit";
 import {
@@ -22,4 +23,5 @@ export {
   GitlabProviderFile,
   GitlabProviderFileOptions,
   GitlabProviderPipeline,
+  GitlabProviderAPI,
 };
