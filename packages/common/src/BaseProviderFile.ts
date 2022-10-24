@@ -51,6 +51,7 @@ export class BaseProviderFile implements IProvider {
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
   private readonly cacheBehavior: "branch" | "contentSha";
+  private readonly softDelete?: boolean;
   private getRecordsPromise?: Promise<Record[]>;
   private lockUpdate = Promise.resolve<any>(null);
 
@@ -66,6 +67,7 @@ export class BaseProviderFile implements IProvider {
       cacheBehavior,
       patchError,
       transform,
+      softDelete,
     }: ProviderFileOptions,
   ) {
     this.projectId = projectId;
@@ -78,14 +80,19 @@ export class BaseProviderFile implements IProvider {
     this.cacheBehavior = cacheBehavior || "branch";
     this.patchError = patchError || this.patchError;
     this.transform = transform || this.transform;
+    this.softDelete = softDelete;
   }
 
   public async getList(params: ListParams = {}) {
     const records = await this.getCachedRecords();
     const sorted = sortRecords(records, params);
-    const filtered = params.filter
-      ? this.filterRecords(sorted, params.filter)
-      : sorted;
+    const filtered =
+      params.filter || this.softDelete
+        ? this.filterRecords(sorted, {
+            ...(this.softDelete ? { deletedAt: undefined } : {}),
+            ...params.filter,
+          })
+        : sorted;
     const paginated = paginateRecords(filtered, params);
 
     return {
@@ -219,11 +226,12 @@ export class BaseProviderFile implements IProvider {
       const getRecords = await this.getRecords();
       const exists = getRecords.exists;
       let records = getRecords.records;
-
       records = (records
         .map(r => {
           if (r.id === params.id) {
-            return undefined;
+            return this.softDelete
+              ? { deletedAt: new Date(), ...r }
+              : undefined;
           } else {
             return r;
           }
@@ -254,7 +262,9 @@ export class BaseProviderFile implements IProvider {
       records = (records
         .map(r => {
           if (params.ids.includes(`${r.id}`)) {
-            return undefined;
+            return this.softDelete
+            ? { deletedAt: new Date(), ...r }
+            : undefined;
           } else {
             return r;
           }
