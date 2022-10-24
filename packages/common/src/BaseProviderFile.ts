@@ -226,11 +226,12 @@ export class BaseProviderFile implements IProvider {
       const getRecords = await this.getRecords();
       const exists = getRecords.exists;
       let records = getRecords.records;
-
       records = (records
         .map(r => {
           if (r.id === params.id) {
-            return undefined;
+            return this.softDelete
+              ? { deletedAt: new Date(), ...r }
+              : undefined;
           } else {
             return r;
           }
@@ -261,7 +262,9 @@ export class BaseProviderFile implements IProvider {
       records = (records
         .map(r => {
           if (params.ids.includes(`${r.id}`)) {
-            return undefined;
+            return this.softDelete
+            ? { deletedAt: new Date(), ...r }
+            : undefined;
           } else {
             return r;
           }
