@@ -1,6 +1,6 @@
 {
   "name": "@react-admin-git-provider/keyv-cache-provider",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "files": [
     "dist"
   ],
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@react-admin-git-provider/common": "^0.12.0"
+    "@react-admin-git-provider/common": "^0.13.0"
   },
   "peerDependencies": {
     "keyv": "^4.0.0"
