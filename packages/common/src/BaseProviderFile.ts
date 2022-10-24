@@ -51,6 +51,7 @@ export class BaseProviderFile implements IProvider {
   private readonly filterRecords: FilterFn;
   private readonly cacheProvider: CacheProvider;
   private readonly cacheBehavior: "branch" | "contentSha";
+  private readonly softDelete?: boolean;
   private getRecordsPromise?: Promise<Record[]>;
   private lockUpdate = Promise.resolve<any>(null);
 
@@ -66,6 +67,7 @@ export class BaseProviderFile implements IProvider {
       cacheBehavior,
       patchError,
       transform,
+      softDelete,
     }: ProviderFileOptions,
   ) {
     this.projectId = projectId;
@@ -78,14 +80,19 @@ export class BaseProviderFile implements IProvider {
     this.cacheBehavior = cacheBehavior || "branch";
     this.patchError = patchError || this.patchError;
     this.transform = transform || this.transform;
+    this.softDelete = softDelete;
   }
 
   public async getList(params: ListParams = {}) {
     const records = await this.getCachedRecords();
     const sorted = sortRecords(records, params);
-    const filtered = params.filter
-      ? this.filterRecords(sorted, params.filter)
-      : sorted;
+    const filtered =
+      params.filter || this.softDelete
+        ? this.filterRecords(sorted, {
+            ...(this.softDelete ? { deletedAt: undefined } : {}),
+            ...params.filter,
+          })
+        : sorted;
     const paginated = paginateRecords(filtered, params);
 
     return {

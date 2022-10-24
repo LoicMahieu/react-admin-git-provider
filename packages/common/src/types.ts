@@ -80,6 +80,7 @@ export interface ProviderOptions {
   path: string;
   cacheProvider?: CacheProvider;
   patchError?: (err: any) => any;
+  softDelete?: boolean;
 }
 
 export declare class IProvider {
